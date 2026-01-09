@@ -7,36 +7,88 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="studio.css">
+    <link rel="stylesheet" href="modern-nav.css">
 </head>
 <body>
     <div class="app-container">
         <!-- 상단 헤더 -->
         <header class="app-header">
             <div class="header-left">
-                <h1>🎬 로이의 유튜브</h1>
-                <span class="version">v2.0</span>
+                <div class="app-logo">
+                    <span class="logo-icon">🎬</span>
+                    <div class="logo-text">
+                        <h1 class="app-title">로이의 유튜브</h1>
+                        <span class="app-subtitle">YouTube Content Creator Studio</span>
+                    </div>
+                </div>
+                <span class="version-badge">v2.0</span>
             </div>
             <div class="header-right">
-                <button class="btn btn-sm" onclick="showSettings()">⚙️ 설정</button>
-                <button class="btn btn-sm" onclick="showAbout()">ℹ️ 정보</button>
+                <button class="header-btn" onclick="showSettings()">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">설정</span>
+                </button>
+                <button class="header-btn" onclick="showAbout()">
+                    <span class="btn-icon">ℹ️</span>
+                    <span class="btn-text">정보</span>
+                </button>
             </div>
         </header>
 
         <!-- 탭 네비게이션 -->
-        <nav class="tab-nav">
-            <div class="tab-nav-inner">
-                <!-- 메인 탭들 -->
-                <button class="tab-btn" data-tab="all-channel-monitor">모든채널모니터</button>
-                <button class="tab-btn" data-tab="channel-monitor">채널모니터</button>
-                <button class="tab-btn" data-tab="keyword-search">키워드검색</button>
-                <button class="tab-btn" data-tab="hot-trend">핫트렌드</button>
-                <button class="tab-btn" data-tab="mutation">돌연변이</button>
-                <!-- 로이스튜디오 탭 -->
-                <button class="tab-btn" data-tab="studio-blackscreen">검은화면</button>
-                <button class="tab-btn active" data-tab="studio-tts-design">영상</button>
-                <button class="tab-btn" data-tab="studio-batch">배치</button>
-                <button class="tab-btn" data-tab="studio-youtube">유튜브</button>
-                <button class="tab-btn" data-tab="studio-channel-manager">관리</button>
+        <nav class="tab-navigation">
+            <div class="tab-nav-container">
+                <div class="tab-group">
+                    <div class="tab-group-label">모니터링</div>
+                    <button class="tab-btn" data-tab="all-channel-monitor">
+                        <span class="tab-icon">📺</span>
+                        <span class="tab-label">모든채널</span>
+                    </button>
+                    <button class="tab-btn" data-tab="channel-monitor">
+                        <span class="tab-icon">📺</span>
+                        <span class="tab-label">채널모니터</span>
+                    </button>
+                </div>
+
+                <div class="tab-group">
+                    <div class="tab-group-label">분석</div>
+                    <button class="tab-btn" data-tab="keyword-search">
+                        <span class="tab-icon">🔍</span>
+                        <span class="tab-label">키워드검색</span>
+                    </button>
+                    <button class="tab-btn" data-tab="hot-trend">
+                        <span class="tab-icon">🔥</span>
+                        <span class="tab-label">핫트렌드</span>
+                    </button>
+                    <button class="tab-btn" data-tab="mutation">
+                        <span class="tab-icon">🚀</span>
+                        <span class="tab-label">돌연변이</span>
+                    </button>
+                </div>
+
+                <div class="tab-group">
+                    <div class="tab-group-label">스튜디오</div>
+                    <button class="tab-btn" data-tab="studio-blackscreen">
+                        <span class="tab-icon">⬛</span>
+                        <span class="tab-label">검은화면</span>
+                    </button>
+                    <button class="tab-btn active" data-tab="studio-tts-design">
+                        <span class="tab-icon">🎨</span>
+                        <span class="tab-label">영상</span>
+                    </button>
+                    <button class="tab-btn" data-tab="studio-batch">
+                        <span class="tab-icon">⚡</span>
+                        <span class="tab-label">배치</span>
+                    </button>
+                    <button class="tab-btn" data-tab="studio-youtube">
+                        <span class="tab-icon">📤</span>
+                        <span class="tab-label">유튜브</span>
+                    </button>
+                    <button class="tab-btn" data-tab="studio-channel-manager">
+                        <span class="tab-icon">⚙️</span>
+                        <span class="tab-label">관리</span>
+                    </button>
+                </div>
             </div>
         </nav>
 

@@ -17,7 +17,13 @@
       "Bash(taskkill:*)",
       "Bash(dir:*)",
       "Bash(del rebuild_html.py)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(gh:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ]
   }
 }
