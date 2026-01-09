@@ -1,4 +1,72 @@
 /* ========================================
+   탭 네비게이션 카테고리 스타일
+   ======================================== */
+
+.tab-nav {
+    background: #252525;
+    border-bottom: 2px solid #333;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.tab-nav-inner {
+    display: flex;
+    gap: 30px;
+    padding: 15px 20px;
+    min-width: fit-content;
+}
+
+.tab-category {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: fit-content;
+}
+
+.tab-category-label {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    padding: 0 10px 5px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 5px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #888;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background: #2a2a2a;
+    color: #e0e0e0;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.tab-icon {
+    font-size: 14px;
+}
+
+/* ========================================
    로이스튜디오 통합 스타일
    ======================================== */
 

@@ -25,16 +25,73 @@
         <!-- 탭 네비게이션 -->
         <nav class="tab-nav">
             <div class="tab-nav-inner">
-                <button class="tab-btn" data-tab="all-channel-monitor">📺 모든채널모니터</button>
-                <button class="tab-btn" data-tab="channel-monitor">📺 채널모니터</button>
-                <button class="tab-btn" data-tab="keyword-search">🔍 키워드검색</button>
-                <button class="tab-btn" data-tab="hot-trend">🔥 핫트렌드</button>
-                <button class="tab-btn" data-tab="mutation">🚀 돌연변이</button>
-                <button class="tab-btn" data-tab="studio-blackscreen">⬛ 검은화면</button>
-                <button class="tab-btn active" data-tab="studio-tts-design">🎨 영상</button>
-                <button class="tab-btn" data-tab="studio-batch">⚡ 배치</button>
-                <button class="tab-btn" data-tab="studio-youtube">📤 유튜브</button>
-                <button class="tab-btn" data-tab="studio-channel-manager">⚙️ 관리</button>
+                <!-- YouTube 분석 -->
+                <div class="tab-category">
+                    <div class="tab-category-label">📊 YouTube 분석</div>
+                    <button class="tab-btn" data-tab="all-channel-monitor">
+                        <span class="tab-icon">📺</span> 모든채널모니터
+                    </button>
+                    <button class="tab-btn" data-tab="channel-monitor">
+                        <span class="tab-icon">🔍</span> 채널모니터
+                    </button>
+                    <button class="tab-btn" data-tab="keyword-search">
+                        <span class="tab-icon">🔎</span> 키워드검색
+                    </button>
+                    <button class="tab-btn" data-tab="hot-trend">
+                        <span class="tab-icon">🔥</span> 핫트렌드
+                    </button>
+                    <button class="tab-btn" data-tab="mutation">
+                        <span class="tab-icon">🚀</span> 돌연변이
+                    </button>
+                </div>
+
+                <!-- 콘텐츠 제작 -->
+                <div class="tab-category">
+                    <div class="tab-category-label">🎬 콘텐츠 제작</div>
+                    <button class="tab-btn" data-tab="studio-blackscreen">
+                        <span class="tab-icon">⬛</span> 검은화면
+                    </button>
+                    <button class="tab-btn active" data-tab="studio-tts-design">
+                        <span class="tab-icon">🎨</span> 영상 디자인
+                    </button>
+                    <button class="tab-btn" data-tab="studio-batch">
+                        <span class="tab-icon">⚡</span> 배치 제작
+                    </button>
+                    <button class="tab-btn" data-tab="studio-subtitle">
+                        <span class="tab-icon">💬</span> 자막 생성
+                    </button>
+                </div>
+
+                <!-- YouTube 관리 -->
+                <div class="tab-category">
+                    <div class="tab-category-label">🛠️ YouTube 관리</div>
+                    <button class="tab-btn" data-tab="studio-youtube">
+                        <span class="tab-icon">📤</span> 업로드
+                    </button>
+                    <button class="tab-btn" data-tab="subscription-manager">
+                        <span class="tab-icon">⭐</span> 구독 관리
+                    </button>
+                    <button class="tab-btn" data-tab="studio-channel-manager">
+                        <span class="tab-icon">🎯</span> 채널 관리
+                    </button>
+                    <button class="tab-btn" data-tab="account-manager">
+                        <span class="tab-icon">🔑</span> 계정 관리
+                    </button>
+                </div>
+
+                <!-- 데이터 & 도구 -->
+                <div class="tab-category">
+                    <div class="tab-category-label">💾 데이터 & 도구</div>
+                    <button class="tab-btn" data-tab="excel-tools">
+                        <span class="tab-icon">📊</span> Excel 도구
+                    </button>
+                    <button class="tab-btn" data-tab="data-export">
+                        <span class="tab-icon">💼</span> 데이터 관리
+                    </button>
+                    <button class="tab-btn" data-tab="cache-manager">
+                        <span class="tab-icon">🗑️</span> 캐시 관리
+                    </button>
+                </div>
             </div>
         </nav>
 
@@ -640,6 +697,202 @@
                         </div>
                         <button onclick="managerAddAccount()" class="btn btn-primary">
                             ➕ 계정 추가
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 자막 생성 탭 -->
+            <div class="tab-pane" id="tab-studio-subtitle">
+                <div class="section-header">
+                    <h2>💬 자막 생성</h2>
+                    <p class="section-description">영상에 자막을 추가합니다.</p>
+                </div>
+
+                <div class="subtitle-container">
+                    <div class="subtitle-section">
+                        <h3>🎬 비디오 파일</h3>
+                        <div class="setting-group">
+                            <div class="path-input-group">
+                                <input type="text" id="subtitle-video-file" readonly placeholder="비디오 파일 선택">
+                                <button onclick="selectSubtitleVideo()" class="btn btn-sm">📂</button>
+                            </div>
+                        </div>
+
+                        <h3>⚙️ 자막 설정</h3>
+                        <div class="setting-group">
+                            <label>언어</label>
+                            <select id="subtitle-language">
+                                <option value="ko">한국어</option>
+                                <option value="en">English</option>
+                                <option value="ja">日本語</option>
+                                <option value="zh">中文</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generateSubtitle()" class="btn btn-primary btn-large">
+                            🎬 자막 생성
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 구독 관리 탭 -->
+            <div class="tab-pane" id="tab-subscription-manager">
+                <div class="section-header">
+                    <h2>⭐ 구독 관리</h2>
+                    <p class="section-description">YouTube 구독을 관리합니다.</p>
+                </div>
+
+                <div class="subscription-controls">
+                    <button onclick="loadSubscriptions()" class="btn btn-primary">🔄 구독 목록 새로고침</button>
+                    <button onclick="exportSubscriptions()" class="btn">📤 내보내기</button>
+                    <button onclick="importSubscriptions()" class="btn">📥 가져오기</button>
+                    <button onclick="clearCache()" class="btn btn-secondary">🗑️ 캐시 삭제</button>
+                </div>
+
+                <div class="subscription-list" id="subscription-list">
+                    <!-- 구독 목록이 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- 계정 관리 탭 -->
+            <div class="tab-pane" id="tab-account-manager">
+                <div class="section-header">
+                    <h2>🔑 계정 관리</h2>
+                    <p class="section-description">YouTube API 계정을 관리합니다.</p>
+                </div>
+
+                <div class="account-container">
+                    <div class="account-section">
+                        <h3>📋 등록된 계정</h3>
+                        <div class="account-list" id="api-account-list">
+                            <!-- 계정 목록이 동적으로 추가됨 -->
+                        </div>
+                        <button onclick="addNewAccount()" class="btn btn-primary">
+                            ➕ 계정 추가
+                        </button>
+                    </div>
+
+                    <div class="account-section">
+                        <h3>🔐 OAuth 계정</h3>
+                        <div class="setting-group">
+                            <label>Client ID</label>
+                            <input type="text" id="oauth-client-id" placeholder="Client ID">
+                        </div>
+                        <div class="setting-group">
+                            <label>Client Secret</label>
+                            <input type="password" id="oauth-client-secret" placeholder="Client Secret">
+                        </div>
+                        <button onclick="saveOAuthAccount()" class="btn btn-primary">
+                            💾 저장
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excel 도구 탭 -->
+            <div class="tab-pane" id="tab-excel-tools">
+                <div class="section-header">
+                    <h2>📊 Excel 도구</h2>
+                    <p class="section-description">Excel 파일에서 데이터를 추출합니다.</p>
+                </div>
+
+                <div class="excel-container">
+                    <div class="excel-section">
+                        <h3>📁 파일 선택</h3>
+                        <div class="setting-group">
+                            <div class="path-input-group">
+                                <input type="text" id="excel-files" readonly placeholder="Excel 파일 선택">
+                                <button onclick="selectExcelFiles()" class="btn btn-sm">📂</button>
+                            </div>
+                        </div>
+
+                        <h3>🎯 셀 범위</h3>
+                        <div class="setting-group">
+                            <label>범위 (예: A1:B10)</label>
+                            <input type="text" id="excel-cell-range" placeholder="A1:B10">
+                        </div>
+
+                        <div class="excel-actions">
+                            <button onclick="extractUrlsFromExcel()" class="btn btn-primary">
+                                🔗 URL 추출
+                            </button>
+                            <button onclick="extractCellsFromExcel()" class="btn btn-primary">
+                                📋 셀 추출
+                            </button>
+                        </div>
+
+                        <div class="excel-results" id="excel-results">
+                            <!-- 결과가 여기에 표시됨 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 관리 탭 -->
+            <div class="tab-pane" id="tab-data-export">
+                <div class="section-header">
+                    <h2>💼 데이터 관리</h2>
+                    <p class="section-description">데이터를 내보내거나 가져옵니다.</p>
+                </div>
+
+                <div class="data-container">
+                    <div class="data-section">
+                        <h3>📤 내보내기</h3>
+                        <button onclick="exportSubscriptions()" class="btn btn-primary">
+                            ⭐ 구독 목록 내보내기
+                        </button>
+                        <button onclick="exportCredentials()" class="btn btn-primary">
+                            🔐 인증 정보 내보내기
+                        </button>
+                    </div>
+
+                    <div class="data-section">
+                        <h3>📥 가져오기</h3>
+                        <button onclick="importSubscriptions()" class="btn btn-primary">
+                            ⭐ 구독 목록 가져오기
+                        </button>
+                        <button onclick="importCredentials()" class="btn btn-primary">
+                            🔐 인증 정보 가져오기
+                        </button>
+                    </div>
+
+                    <div class="data-section">
+                        <h3>📁 데이터 폴더</h3>
+                        <div class="setting-group">
+                            <input type="text" id="data-folder-path" readonly>
+                            <button onclick="openDataFolder()" class="btn btn-sm">📂 열기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 캐시 관리 탭 -->
+            <div class="tab-pane" id="tab-cache-manager">
+                <div class="section-header">
+                    <h2>🗑️ 캐시 관리</h2>
+                    <p class="section-description">캐시를 관리하고 정리합니다.</p>
+                </div>
+
+                <div class="cache-container">
+                    <div class="cache-stats">
+                        <div class="cache-stat-item">
+                            <h3>💾 캐시 크기</h3>
+                            <p id="cache-size">0 MB</p>
+                        </div>
+                        <div class="cache-stat-item">
+                            <h3>📁 캐시 파일 수</h3>
+                            <p id="cache-file-count">0개</p>
+                        </div>
+                    </div>
+
+                    <div class="cache-actions">
+                        <button onclick="refreshCacheStats()" class="btn btn-primary">
+                            🔄 통계 새로고침
+                        </button>
+                        <button onclick="clearCache()" class="btn btn-danger">
+                            🗑️ 캐시 삭제
                         </button>
                     </div>
                 </div>
