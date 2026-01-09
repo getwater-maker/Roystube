@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ã«Â¡ÂÃ¬ÂÂ´???Â Ã­ÂÂÃ«Â¸?/title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="studio.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ?Â¸Ã¬Â¦Â ?ÂÃ«Â³Â´ ?ÂÃ«Â Â¥ ?Â¹Ã¬ÂÂ (??ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?) -->
+        <section id="setup-section" class="login-section" style="display:none;">
+            <div class="login-box setup-box">
+                <h1>??ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?</h1>
+                <p>??ÃªÂ³ÂÃ¬Â Â???ÂÃ­ÂÂ Google Cloud ?ÂÃ«Â¡Â?ÂÃ­ÂÂ¸??OAuth ?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ???ÂÃ«Â Â¥?ÂÃ¬ÂÂ¸?? ÃªÂ°?ÃªÂ³ÂÃ¬Â Â?Â ?ÂÃ¬Â²Â´ API ?Â Ã«ÂÂ¹?ÂÃ¬ÂÂ ?Â¬Ã¬ÂÂ©?Â©Ã«ÂÂ??</p>
+
+                <div class="setup-form">
+                    <div class="form-group">
+                        <label for="input-client-id">Client ID</label>
+                        <input type="text" id="input-client-id" placeholder="xxxxx.apps.googleusercontent.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-client-secret">Client Secret</label>
+                        <input type="password" id="input-client-secret" placeholder="GOCSPX-xxxxx">
+                    </div>
+                    <button id="btn-save-config" class="btn btn-primary btn-large">?Â??Ã«Â°?Ã«Â¡ÂÃªÂ·Â¸??/button>
+                    <button id="btn-cancel-setup" class="btn btn-sm btn-link">Ã¬Â·Â¨Ã¬ÂÂ</button>
+                    <button id="btn-show-guide" class="btn btn-sm btn-link">?Â¤Ã¬Â Â Ã«Â°Â©Ã«Â²Â ?ÂÃ¬ÂÂ¸??Ã«Â³Â´ÃªÂ¸Â°</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Google Ã«Â¡ÂÃªÂ·Â¸???Â¹Ã¬ÂÂ -->
+        <section id="login-section" class="login-section" style="display:none;">
+            <div class="login-box setup-box">
+                <h1>Ã«Â¡ÂÃ¬ÂÂ´???Â Ã­ÂÂÃ«Â¸?/h1>
+
+                <!-- ?Â¬Ã¬Â Â ?Â¤Ã¬Â Â??ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ (?ÂÃ­ÂÂ¸?ÂÃ«ÂÂ ?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ???ÂÃ¬ÂÂ ?? -->
+                <div id="preset-account-section" style="display:none;">
+                    <p>?Â¬Ã¬ÂÂ©??ÃªÂ³ÂÃ¬Â Â???Â Ã­ÂÂ?ÂÃ¬ÂÂ¸??</p>
+                    <div class="setup-form">
+                        <!-- ÃªÂ³ÂÃ¬Â Â Ã«ÂªÂ©Ã«Â¡Â (Ã¬Â¹Â´Ã«ÂÂ ?ÂÃ­ÂÂ) -->
+                        <div class="account-list" id="account-list">
+                            <!-- JS?ÂÃ¬ÂÂ ?ÂÃ¬Â Â ?ÂÃ¬ÂÂ± -->
+                        </div>
+
+                        <!-- ?Â Ã­ÂÂ??ÃªÂ³ÂÃ¬Â Â ?Â¡Ã¬ÂÂ Ã«Â²ÂÃ­ÂÂ¼ -->
+                        <div class="account-actions" id="account-actions" style="display:none;">
+                            <button id="btn-preset-login" class="btn btn-primary btn-large" disabled>
+                                <span class="btn-icon">?ÂÂ</span> Ã«Â¡ÂÃªÂ·Â¸??                            </button>
+                            <button id="btn-create-token" class="btn btn-success btn-large" style="display:none;">
+                                <span class="btn-icon">?ÂÂ</span> ?Â Ã­ÂÂ° ?ÂÃ¬ÂÂ±
+                            </button>
+                        </div>
+
+                        <!-- ?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ ÃªÂ´ÂÃ«Â¦?Ã«Â²ÂÃ­ÂÂ¼ -->
+                        <div class="credential-management">
+                            <button id="btn-add-oauth-account" class="btn btn-sm btn-outline" title="??OAuth ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?">
+                                ??ÃªÂ³ÂÃ¬Â ÂÃ¬Â¶ÂÃª?
+                            </button>
+                            <button id="btn-export-credentials" class="btn btn-sm btn-outline" title="?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°">
+                                ?ÂÂ¤ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°
+                            </button>
+                            <button id="btn-import-credentials" class="btn btn-sm btn-outline" title="?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?>
+                                ?ÂÂ¥ ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?                            </button>
+                        </div>
+
+                        <button id="btn-show-manual-setup" class="btn btn-sm btn-link">Ã¬Â§ÂÃ¬Â Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã¬Â ÂÃ«Â³??ÂÃ«Â Â¥?ÂÃªÂ¸Â°</button>
+                    </div>
+                </div>
+
+                <!-- ?ÂÃ«ÂÂ API ?ÂÃ«Â Â¥ (?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ???ÂÃªÂ±Â°??Ã¬Â§ÂÃ¬Â Â ?ÂÃ«Â Â¥ ?Â Ã­ÂÂ ?? -->
+                <div id="manual-setup-section">
+                    <p>Google Cloud Console?ÂÃ¬ÂÂ Ã«Â°ÂÃªÂ¸ÂÃ«Â°ÂÃ¬? API ?ÂÃªÂ²Â©Ã¬Â¦ÂÃ«ÂªÂ???ÂÃ«Â Â¥?ÂÃªÂ³Â  Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ?Â¸Ã¬ÂÂ.</p>
+                    <div class="setup-form">
+                        <div class="form-group">
+                            <label for="login-client-id">Client ID</label>
+                            <input type="text" id="login-client-id" placeholder="xxxxx.apps.googleusercontent.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-client-secret">Client Secret</label>
+                            <input type="password" id="login-client-secret" placeholder="GOCSPX-xxxxx">
+                        </div>
+                        <button id="btn-login" class="btn btn-primary btn-large">Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸??/button>
+                        <button id="btn-show-guide-login" class="btn btn-sm btn-link">?Â¤Ã¬Â Â Ã«Â°Â©Ã«Â²Â ?ÂÃ¬ÂÂ¸??Ã«Â³Â´ÃªÂ¸Â°</button>
+                        <button id="btn-back-to-preset" class="btn btn-sm btn-link" style="display:none;">ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ?Â¼Ã«Â¡Â ?ÂÃ¬ÂÂÃªÂ°ÂÃªÂ¸?/button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ?ÂÃ¬Â²Â´ ???Â¤Ã«ÂÂ -->
+        <header class="app-header">
+            <div class="app-header-left">
+                <h1 class="app-title">Ã«Â¡ÂÃ¬ÂÂ´???Â Ã­ÂÂÃ«Â¸?<span class="app-version">V 1.59</span></h1>
+            </div>
+            <div class="app-header-right">
+                <span id="subs-info" class="subs-badge"></span>
+                <!-- ?ÂÃ«Â¦Â¬??OAuth ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ ?ÂÃ«Â¡Â­?Â¤Ã¬ÂÂ´ -->
+                <div class="preset-oauth-selector" id="preset-oauth-selector" style="display:none;">
+                    <div class="preset-oauth-current" id="preset-oauth-current" title="ÃªÂ³ÂÃ¬Â Â ?ÂÃ­ÂÂ">
+                        <img id="preset-oauth-thumbnail" src="" alt="" class="account-avatar">
+                        <span id="preset-oauth-name">ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ</span>
+                        <span class="preset-oauth-arrow">??/span>
+                    </div>
+                    <div class="preset-oauth-dropdown" id="preset-oauth-dropdown" style="display:none;">
+                        <div id="preset-oauth-list" class="preset-oauth-list">
+                            <!-- ?ÂÃ«Â¦Â¬??OAuth ÃªÂ³ÂÃ¬Â Â Ã«ÂªÂ©Ã«Â¡Â???ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ«ÂÂÃ«Â§ÂÃ«ÂÂ¨ -->
+                        </div>
+                    </div>
+                </div>
+                <!-- ÃªÂ¸Â°Ã¬Â¡Â´ ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ ?ÂÃ«Â¡Â­?Â¤Ã¬ÂÂ´ (?ÂÃ«Â¦Â¬??OAuth ?Â¬Ã¬ÂÂ© ???Â¨Ãª?) -->
+                <div class="account-selector" id="account-selector" style="display:none;">
+                    <div class="account-current" id="account-current" title="ÃªÂ³ÂÃ¬Â Â ?ÂÃ­ÂÂ">
+                        <img id="account-thumbnail" src="" alt="" class="account-avatar">
+                        <span id="account-name">ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ</span>
+                        <span class="account-arrow">??/span>
+                    </div>
+                    <div class="account-dropdown" id="account-dropdown" style="display:none;">
+                        <div id="account-list" class="account-list">
+                            <!-- ÃªÂ³ÂÃ¬Â Â Ã«ÂªÂ©Ã«Â¡Â???ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ«ÂÂÃ«Â§ÂÃ«ÂÂ¨ -->
+                        </div>
+                        <div class="account-dropdown-footer">
+                            <button id="btn-add-account" class="btn btn-sm btn-full">+ ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- YouTube Ã¬Â±ÂÃ«ÂÂ ?Â Ã­ÂÂ (Ã«Â¸ÂÃ«ÂÂ??Ã¬Â±ÂÃ«ÂÂ ?? -->
+                <div class="channel-selector" id="channel-selector" style="display:none;">
+                    <div class="channel-current" id="channel-current" title="Ã¬Â±ÂÃ«ÂÂ Ã«Â³ÂÃªÂ²?>
+                        <img id="channel-thumbnail" src="" alt="">
+                        <span id="channel-name"></span>
+                        <span class="channel-arrow">??/span>
+                    </div>
+                    <div class="channel-dropdown" id="channel-dropdown" style="display:none;">
+                        <div id="channel-list"></div>
+                    </div>
+                </div>
+                <button id="btn-google-console" class="btn btn-sm btn-google-console" title="Google Cloud Console">ÃªÂµÂ¬Ãª??ÂÃ«Â¹Â??/button>
+                <button onclick="studioOpenTTSKeyManager()" class="btn btn-sm btn-tts-key" title="TTS API ??ÃªÂ´ÂÃ«Â¦?>?ÂÂ API??/button>
+                <button id="btn-refresh-subs" class="btn btn-sm">?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨</button>
+                <button id="btn-logout" class="btn btn-sm btn-secondary">Ã«Â¡ÂÃªÂ·Â¸?ÂÃ¬ÂÂ</button>
+            </div>
+        </header>
+
+        <!-- ÃªÂ²Â???Â¹Ã¬ÂÂ -->
+        <section id="search-section" class="search-section" style="display:none;">
+            <!-- Ã«Â©ÂÃ¬ÂÂ¸ Ã¬Â»Â¨Ã­ÂÂÃ¬Â¸??ÂÃ¬ÂÂ­ (?Â¬Ã¬ÂÂ´?ÂÃ«Â°Â + Ã¬Â½ÂÃ­ÂÂÃ¬Â¸? -->
+            <div class="main-content">
+                <!-- ?Â¼Ã¬ÂªÂ½ ?Â¬Ã¬ÂÂ´?ÂÃ«Â°Â: ÃªÂµÂ¬Ã«ÂÂÃ¬Â±ÂÃ«ÂÂ Ã¬Â¹Â´Ã­ÂÂÃªÂ³Â Ã«Â¦Â¬ -->
+                <aside class="channel-sidebar" id="channel-sidebar">
+                    <div class="sidebar-header">
+                        <h3>ÃªÂµÂ¬Ã«ÂÂÃ¬Â±ÂÃ«ÂÂ</h3>
+                        <div class="sidebar-actions">
+                            <button id="btn-sidebar-export" class="btn btn-xs" title="?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°">?ÂÂ¤</button>
+                            <button id="btn-sidebar-import" class="btn btn-xs" title="ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?>?ÂÂ¥</button>
+                            <button id="btn-sidebar-reload" class="btn btn-xs" title="?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨">?ÂÂ</button>
+                        </div>
+                    </div>
+
+                    <!-- Ã¬Â±ÂÃ«ÂÂ ÃªÂ²Â??-->
+                    <div class="sidebar-search">
+                        <input type="text" id="sidebar-channel-search" placeholder="Ã¬Â±ÂÃ«ÂÂ ÃªÂ²Â??.." class="sidebar-search-input">
+                        <span id="sidebar-search-clear" class="sidebar-search-clear" style="display:none;">ÃÂ</span>
+                    </div>
+
+                    <!-- Ã¬Â±ÂÃ«ÂÂ Ã¬Â¹Â´Ã­ÂÂÃªÂ³Â Ã«Â¦Â¬ (?ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ«ÂÂÃ«Â§ÂÃ«ÂÂ¨) -->
+                    <div class="channel-categories">
+                        <!-- JavaScript?ÂÃ¬ÂÂ ?ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ¬ÂÂ±??-->
+                    </div>
+
+                    <!-- ?Â¬Ã¬ÂÂ´?ÂÃ«Â°Â ?ÂÃ«ÂÂ¨ ?Â´Ã«Â°Â -->
+                    <div class="sidebar-footer">
+                        <button id="btn-manage-subs" class="btn-manage-subs">?ÂÂ ÃªÂµÂ¬Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂ ÃªÂ´ÂÃ«Â¦?/button>
+                    </div>
+                </aside>
+
+                <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª?Ã«Â©ÂÃ¬ÂÂ¸ Ã¬Â½ÂÃ­ÂÂÃ¬Â¸?-->
+                <div class="content-area">
+                    <!-- ??Ã«Â©ÂÃ«ÂÂ´ -->
+                    <div class="tab-container">
+                <div class="tab-menu">
+                    <button class="tab-btn" data-tab="all-channel-monitor">Ã«ÂªÂ¨Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂÃ«ÂªÂ¨Ã«ÂÂ??/button>
+                    <button class="tab-btn" data-tab="channel-monitor">Ã¬Â±ÂÃ«ÂÂÃ«ÂªÂ¨Ã«ÂÂ??/button>
+                    <button class="tab-btn" data-tab="keyword-search">?Â¤Ã¬ÂÂ?ÂÃª???/button>
+                    <button class="tab-btn" data-tab="hot-trend">?Â«Ã­ÂÂ¸?ÂÃ«ÂÂ</button>
+                    <button class="tab-btn" data-tab="mutation">?ÂÃ¬ÂÂ°Ã«Â³Â??/button>
+                    <!-- Ã«Â¡ÂÃ¬ÂÂ´?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ ??(ÃªÂ°ÂÃ«Â³Â ?? -->
+                    <button class="tab-btn" data-tab="studio-blackscreen">ÃªÂ²Â?Â?ÂÃ«Â©Â´</button>
+                    <button class="tab-btn active" data-tab="studio-tts-design">?ÂÃ¬ÂÂ</button>
+                    <button class="tab-btn" data-tab="studio-batch">Ã«Â°Â°Ã¬Â¹Â</button>
+                    <button class="tab-btn" data-tab="studio-youtube">?Â Ã­ÂÂÃ«Â¸?/button>
+                    <button class="tab-btn" data-tab="studio-channel-manager">ÃªÂ´ÂÃ«Â¦?/button>
+                    <!-- Ã¬Â¶ÂÃª? ÃªÂ¸Â°Ã«ÂÂ¥ ??(?ÂÃ«Â¡Â­?Â¤Ã¬ÂÂ´ Ã«Â©ÂÃ«ÂÂ´) -->
+                    <div class="tab-dropdown">
+                        <button class="tab-btn tab-dropdown-toggle" data-tab="additional-features">
+                            Ã¬Â¶ÂÃª?ÃªÂ¸Â°Ã«ÂÂ¥ <span class="dropdown-arrow">??/span>
+                        </button>
+                        <div class="tab-dropdown-menu">
+                            <button class="tab-btn" data-tab="batch-subscribe">??Ã¬Â±ÂÃ«ÂÂÃªÂµÂ¬Ã«ÂÂ</button>
+                            <button class="tab-btn" data-tab="line-break">??Ã«Â¸ÂÃ«Â£Â¨Ã¬ÂµÂÃ¬Â Â??/button>
+                            <button class="tab-btn" data-tab="chat-extract">???Â?ÂÃ¬Â¶ÂÃ¬Â¶?/button>
+                            <button class="tab-btn" data-tab="text-merge">???ÂÃ¬ÂÂ¤?Â¸Ã­ÂÂ©Ã¬Â¹ÂÃªÂ¸Â°</button>
+                            <button class="tab-btn" data-tab="mp3-extract">??MP3Ã¬Â¶ÂÃ¬Â¶Â</button>
+                            <button class="tab-btn" data-tab="pdf-utils">??PDF?ÂÃªÂµÂ¬</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ??Ã¬Â»Â¨Ã­ÂÂÃ¬Â¸?-->
+                <div class="tab-content">
+                    <!-- Ã«ÂªÂ¨Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂÃ«ÂªÂ¨Ã«ÂÂ????-->
+                    <div class="tab-pane" id="tab-all-channel-monitor">
+                        <div class="filter-bar">
+                            <div class="filter-group">
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type" value="long" checked>
+                                    <span>Ã«Â¡Â±Ã­ÂÂ¼</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type" value="shorts">
+                                    <span>?Â¼Ã¬Â¸Â </span>
+                                </label>
+                            </div>
+                            <div class="inline-input subscriber-select">
+                                <span>ÃªÂµÂ¬Ã«ÂÂ??/span>
+                                <select id="subscriber-category" class="subscriber-dropdown">
+                                    <option value="all">?ÂÃ¬Â²Â´</option>
+                                    <option value="reference" selected>Ã¬Â°Â¸ÃªÂ³Â Ã¬Â±ÂÃ«ÂÂ (1Ã¬Â²?3Ã«Â§?</option>
+                                    <option value="master">ÃªÂ³Â Ã¬ÂÂÃ¬Â±ÂÃ«ÂÂ (7Ã«Â§ÂÃ¢ÂÂ)</option>
+                                    <option value="middle">?Â´Ã¬Â¤ÂÃªÂ°ÂÃ¬Â±Â??(3Ã«Â§?7Ã«Â§?</option>
+                                    <option value="explosive">??Â°Â?ÂÃªÂ¸?(1Ã¬Â²ÂÃ¢ÂÂ)</option>
+                                    <option value="custom">Ã¬Â§ÂÃ¬Â Â?ÂÃ«Â Â¥</option>
+                                </select>
+                                <input type="text" id="max-subscribers" class="subscriber-custom-input" value="10,000" style="display:none;">
+                                <span class="subscriber-suffix" style="display:none;">?Â´Ã­ÂÂ</span>
+                            </div>
+                            <div class="inline-input">
+                                <span>Ã¬Â¡Â°Ã­ÂÂ??/span>
+                                <input type="text" id="min-views" value="10,000">
+                                <span>?Â´Ã¬ÂÂ</span>
+                            </div>
+                            <div class="inline-input period-select">
+                                <span>ÃªÂ¸Â°ÃªÂ°Â</span>
+                                <select id="days-within" class="period-dropdown">
+                                    <option value="rss" selected>RSS (?Â Ã«ÂÂ¹??0)</option>
+                                    <option value="7">1Ã¬Â£Â¼Ã¬ÂÂ¼</option>
+                                    <option value="30">1ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="90">3ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="180">6ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="270">9ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="330">11ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="custom">Ã¬Â§ÂÃ¬Â Â?ÂÃ«Â Â¥</option>
+                                </select>
+                                <input type="number" id="days-within-custom" class="period-custom-input" min="1" max="365" style="display:none;" placeholder="30">
+                                <span class="period-unit" style="display:none;">??/span>
+                            </div>
+                            <button id="btn-search" class="btn btn-primary" disabled>ÃªÂ²Â??/button>
+                            <button id="btn-export-filter" class="btn btn-sm btn-export-filter" title="ÃªÂ²Â?ÂÃªÂ²Â°ÃªÂ³??Â´Ã«Â³Â´?Â´ÃªÂ¸Â°" style="display:none;">?ÂÂ¥ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                            <div class="history-dropdown">
+                                <button id="btn-history" class="btn btn-sm" title="ÃªÂ²Â??ÃªÂ¸Â°Ã«Â¡Â">??/button>
+                                <div id="history-menu" class="history-menu" style="display:none;"></div>
+                            </div>
+                        </div>
+                        <p class="tab-description">ÃªÂµÂ¬Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂ ?Â´Ã¬ÂÂ??ÃªÂµÂ¬Ã«ÂÂ??Ã¬Â¡Â°Ã­ÂÂ??Ã¬Â¡Â°ÃªÂ±Â´??Ã«Â§ÂÃ«ÂÂ ?ÂÃ¬ÂÂ??Ã«ÂªÂ¨Ã«ÂÂ?Â°Ã«Â§Â?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- Ã¬Â±ÂÃ«ÂÂÃ«ÂªÂ¨Ã«ÂÂ????(?Â¨Ã¬ÂÂ¼ Ã¬Â±ÂÃ«ÂÂ) -->
+                    <div class="tab-pane" id="tab-channel-monitor">
+                        <div class="filter-bar">
+                            <div class="inline-input channel-select-wrapper">
+                                <span>Ã¬Â±ÂÃ«ÂÂ</span>
+                                <select id="single-channel-select" class="channel-select-dropdown">
+                                    <option value="">Ã¬Â±ÂÃ«ÂÂ ?Â Ã­ÂÂ...</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-single" value="long" checked>
+                                    <span>Ã«Â¡Â±Ã­ÂÂ¼</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-single" value="shorts">
+                                    <span>?Â¼Ã¬Â¸Â </span>
+                                </label>
+                            </div>
+                            <div class="inline-input">
+                                <span>Ã¬Â¡Â°Ã­ÂÂ??/span>
+                                <input type="text" id="min-views-single" value="10,000">
+                                <span>?Â´Ã¬ÂÂ</span>
+                            </div>
+                            <div class="inline-input period-select">
+                                <span>ÃªÂ¸Â°ÃªÂ°Â</span>
+                                <select id="days-within-single" class="period-dropdown">
+                                    <option value="rss" selected>RSS (?Â Ã«ÂÂ¹??0)</option>
+                                    <option value="7">1Ã¬Â£Â¼Ã¬ÂÂ¼</option>
+                                    <option value="30">1ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="90">3ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="180">6ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="270">9ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="330">11ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="custom">Ã¬Â§ÂÃ¬Â Â?ÂÃ«Â Â¥</option>
+                                </select>
+                                <input type="number" id="days-within-single-custom" class="period-custom-input" min="1" max="365" style="display:none;" placeholder="30">
+                                <span class="period-unit" style="display:none;">??/span>
+                            </div>
+                            <button id="btn-search-single" class="btn btn-primary" disabled>ÃªÂ²Â??/button>
+                            <button id="btn-export-filter-single" class="btn btn-sm btn-export-filter" title="ÃªÂ²Â?ÂÃªÂ²Â°ÃªÂ³??Â´Ã«Â³Â´?Â´ÃªÂ¸Â°" style="display:none;">?ÂÂ¥ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                        </div>
+                        <p class="tab-description">?Â Ã­ÂÂ??1ÃªÂ°?Ã¬Â±ÂÃ«ÂÂ???ÂÃ¬ÂÂ??Ã«ÂªÂ¨Ã«ÂÂ?Â°Ã«Â§Â?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- ?Â¤Ã¬ÂÂ?ÂÃª?????-->
+                    <div class="tab-pane" id="tab-keyword-search">
+                        <div class="filter-bar">
+                            <div class="inline-input keyword-input">
+                                <span>?Â¤Ã¬ÂÂ??/span>
+                                <input type="text" id="search-keyword" placeholder="ÃªÂ²Â?ÂÃ¬ÂÂ´ ?ÂÃ«Â Â¥...">
+                            </div>
+                            <div class="inline-input subscriber-select keyword-subscriber-select" id="keyword-subscriber-wrapper">
+                                <span>ÃªÂµÂ¬Ã«ÂÂ??/span>
+                                <select id="subscriber-category-keyword" class="subscriber-dropdown">
+                                    <option value="all">?ÂÃ¬Â²Â´</option>
+                                    <option value="reference" selected>Ã¬Â°Â¸ÃªÂ³Â Ã¬Â±ÂÃ«ÂÂ (1Ã¬Â²?3Ã«Â§?</option>
+                                    <option value="master">ÃªÂ³Â Ã¬ÂÂÃ¬Â±ÂÃ«ÂÂ (7Ã«Â§ÂÃ¢ÂÂ)</option>
+                                    <option value="middle">?Â´Ã¬Â¤ÂÃªÂ°ÂÃ¬Â±Â??(3Ã«Â§?7Ã«Â§?</option>
+                                    <option value="explosive">??Â°Â?ÂÃªÂ¸?(1Ã¬Â²ÂÃ¢ÂÂ)</option>
+                                </select>
+                            </div>
+                            <div class="inline-input keyword-views-wrapper" id="keyword-views-wrapper">
+                                <span>Ã¬Â¡Â°Ã­ÂÂ??/span>
+                                <input type="text" id="min-views-keyword" value="10,000">
+                                <span>?Â´Ã¬ÂÂ</span>
+                            </div>
+                            <label class="checkbox-label youtube-search-toggle">
+                                <input type="checkbox" id="youtube-global-search">
+                                <span>YouTube ?ÂÃ¬Â²Â´</span>
+                            </label>
+                            <div class="filter-group">
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-keyword" value="long" checked>
+                                    <span>Ã«Â¡Â±Ã­ÂÂ¼</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-keyword" value="shorts">
+                                    <span>?Â¼Ã¬Â¸Â </span>
+                                </label>
+                            </div>
+                            <div class="inline-input period-select">
+                                <span>ÃªÂ¸Â°ÃªÂ°Â</span>
+                                <select id="days-within-keyword" class="period-dropdown">
+                                    <option value="rss" selected>RSS (?Â Ã«ÂÂ¹??0)</option>
+                                    <option value="7">1Ã¬Â£Â¼Ã¬ÂÂ¼</option>
+                                    <option value="30">1ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="90">3ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="180">6ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="270">9ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="330">11ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="custom">Ã¬Â§ÂÃ¬Â Â?ÂÃ«Â Â¥</option>
+                                </select>
+                                <input type="number" id="days-within-keyword-custom" class="period-custom-input" min="1" max="365" style="display:none;" placeholder="30">
+                                <span class="period-unit" style="display:none;">??/span>
+                            </div>
+                            <button id="btn-search-keyword" class="btn btn-primary" disabled>ÃªÂ²Â??/button>
+                            <button id="btn-export-filter-keyword" class="btn btn-sm btn-export-filter" title="ÃªÂ²Â?ÂÃªÂ²Â°ÃªÂ³??Â´Ã«Â³Â´?Â´ÃªÂ¸Â°" style="display:none;">?ÂÂ¥ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                            <div class="history-dropdown keyword-history-dropdown">
+                                <button id="btn-keyword-history" class="btn btn-sm" title="?Â¤Ã¬ÂÂ??ÃªÂ¸Â°Ã«Â¡Â">??/button>
+                                <div id="keyword-history-menu" class="history-menu" style="display:none;"></div>
+                            </div>
+                        </div>
+                        <p class="tab-description" id="keyword-search-desc">ÃªÂµÂ¬Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂ ?Â´Ã¬ÂÂ???Â¤Ã¬ÂÂ?ÂÃª? ?Â¬Ã­ÂÂ¨???ÂÃ¬ÂÂ??ÃªÂ²Â?ÂÃ­ÂÂ©?ÂÃ«ÂÂ¤.</p>
+                    </div>
+
+                    <!-- ?Â«Ã­ÂÂ¸?ÂÃ«ÂÂ ??-->
+                    <div class="tab-pane" id="tab-hot-trend">
+                        <div class="filter-bar">
+                            <div class="inline-input">
+                                <span>ÃªÂµ??</span>
+                                <select id="region-code" class="region-dropdown">
+                                    <option value="KR" selected>?ÂÃªÂµÂ­</option>
+                                    <option value="US">Ã«Â¯Â¸ÃªÂµÂ­</option>
+                                    <option value="JP">?Â¼Ã«Â³Â¸</option>
+                                    <option value="GB">?ÂÃªÂµÂ­</option>
+                                    <option value="DE">?ÂÃ¬ÂÂ¼</option>
+                                    <option value="FR">?ÂÃ«ÂÂ??/option>
+                                    <option value="BR">Ã«Â¸ÂÃ«ÂÂ¼Ã¬Â§?/option>
+                                    <option value="IN">?Â¸Ã«ÂÂ</option>
+                                    <option value="RU">?Â¬Ã¬ÂÂ??/option>
+                                    <option value="CA">Ã¬ÂºÂÃ«ÂÂ??/option>
+                                    <option value="AU">?Â¸Ã¬Â£Â¼</option>
+                                    <option value="TW">?ÂÃ«Â§?/option>
+                                    <option value="HK">?ÂÃ¬Â½Â©</option>
+                                    <option value="SG">?Â±Ãª??Â¬Ã«Â¥Â´</option>
+                                    <option value="TH">?ÂÃªÂµÂ­</option>
+                                    <option value="VN">Ã«Â²Â Ã­ÂÂ¸??/option>
+                                    <option value="ID">?Â¸Ã«ÂÂ?Â¤Ã¬ÂÂ??/option>
+                                    <option value="PH">?ÂÃ«Â¦Â¬?Â</option>
+                                    <option value="MY">Ã«Â§ÂÃ«Â Â?Â´Ã¬ÂÂ??/option>
+                                    <option value="MX">Ã«Â©ÂÃ¬ÂÂÃ¬Â½?/option>
+                                </select>
+                            </div>
+                            <div class="inline-input">
+                                <span>Ã¬Â¹Â´Ã­ÂÂÃªÂ³Â Ã«Â¦Â¬</span>
+                                <select id="trend-category" class="category-dropdown">
+                                    <option value="0">?ÂÃ¬Â²Â´</option>
+                                    <option value="1">?ÂÃ­ÂÂ/?Â Ã«ÂÂÃ«Â©ÂÃ¬ÂÂ´??/option>
+                                    <option value="2">?ÂÃ«ÂÂÃ¬Â°?/option>
+                                    <option value="10">?ÂÃ¬ÂÂ</option>
+                                    <option value="15">?ÂÃ«Â¬Â¼</option>
+                                    <option value="17">?Â¤Ã­ÂÂ¬Ã¬Â¸?/option>
+                                    <option value="19">?Â¬Ã­ÂÂ/?Â´Ã«Â²Â¤??/option>
+                                    <option value="20">ÃªÂ²ÂÃ¬ÂÂ</option>
+                                    <option value="22">?Â¸Ã«Â¬Â¼/Ã«Â¸ÂÃ«Â¡ÂÃªÂ·?/option>
+                                    <option value="23">Ã¬Â½ÂÃ«???/option>
+                                    <option value="24">?ÂÃ­ÂÂ°?ÂÃ¬ÂÂ¸Ã«Â¨Â¼Ã­ÂÂ¸</option>
+                                    <option value="25">?Â´Ã¬ÂÂ¤/?ÂÃ¬Â¹Â</option>
+                                    <option value="26">?Â¸Ã­ÂÂ???Â¤Ã­???/option>
+                                    <option value="27" selected>ÃªÂµÂÃ¬ÂÂ¡</option>
+                                    <option value="28">ÃªÂ³Â¼Ã­ÂÂ/ÃªÂ¸Â°Ã¬ÂÂ </option>
+                                </select>
+                            </div>
+                            <button id="btn-search-trend" class="btn btn-primary">ÃªÂ²Â??/button>
+                            <button id="btn-export-filter-trend" class="btn btn-sm btn-export-filter" title="ÃªÂ²Â?ÂÃªÂ²Â°ÃªÂ³??Â´Ã«Â³Â´?Â´ÃªÂ¸Â°" style="display:none;">?ÂÂ¥ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                        </div>
+                        <p class="tab-description">?Â Ã­ÂÂ??ÃªÂµ????YouTube ?Â¸ÃªÂ¸Â° ?ÂÃ¬ÂÂ??Top 50???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- ?ÂÃ¬ÂÂ°Ã«Â³Â????-->
+                    <div class="tab-pane" id="tab-mutation">
+                        <div class="filter-bar">
+                            <div class="filter-group">
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-mutation" value="long" checked>
+                                    <span>Ã«Â¡Â±Ã­ÂÂ¼</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="video-type-mutation" value="shorts">
+                                    <span>?Â¼Ã¬Â¸Â </span>
+                                </label>
+                            </div>
+                            <div class="inline-input subscriber-select">
+                                <span>ÃªÂµÂ¬Ã«ÂÂ??/span>
+                                <select id="subscriber-category-mutation" class="subscriber-dropdown">
+                                    <option value="all">?ÂÃ¬Â²Â´</option>
+                                    <option value="reference" selected>Ã¬Â°Â¸ÃªÂ³Â Ã¬Â±ÂÃ«ÂÂ (1Ã¬Â²?3Ã«Â§?</option>
+                                    <option value="master">ÃªÂ³Â Ã¬ÂÂÃ¬Â±ÂÃ«ÂÂ (7Ã«Â§ÂÃ¢ÂÂ)</option>
+                                    <option value="middle">?Â´Ã¬Â¤ÂÃªÂ°ÂÃ¬Â±Â??(3Ã«Â§?7Ã«Â§?</option>
+                                    <option value="explosive">??Â°Â?ÂÃªÂ¸?(1Ã¬Â²ÂÃ¢ÂÂ)</option>
+                                </select>
+                            </div>
+                            <div class="inline-input">
+                                <span>?ÂÃ¬ÂÂ°Ã«Â³Â??Ã¬Â§Â??/span>
+                                <input type="number" id="mutation-ratio" value="2" min="0" step="0.1">
+                                <span>?Â´Ã¬ÂÂ</span>
+                            </div>
+                            <div class="inline-input period-select">
+                                <span>ÃªÂ¸Â°ÃªÂ°Â</span>
+                                <select id="days-within-mutation" class="period-dropdown">
+                                    <option value="rss" selected>RSS (?Â Ã«ÂÂ¹??0)</option>
+                                    <option value="7">1Ã¬Â£Â¼Ã¬ÂÂ¼</option>
+                                    <option value="30">1ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="90">3ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="180">6ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="270">9ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="330">11ÃªÂ°ÂÃ¬ÂÂ</option>
+                                    <option value="custom">Ã¬Â§ÂÃ¬Â Â?ÂÃ«Â Â¥</option>
+                                </select>
+                                <input type="number" id="days-within-mutation-custom" class="period-custom-input" min="1" max="365" style="display:none;" placeholder="30">
+                                <span class="period-unit" style="display:none;">??/span>
+                            </div>
+                            <button id="btn-search-mutation" class="btn btn-primary" disabled>ÃªÂ²Â??/button>
+                            <button id="btn-export-filter-mutation" class="btn btn-sm btn-export-filter" title="ÃªÂ²Â?ÂÃªÂ²Â°ÃªÂ³??Â´Ã«Â³Â´?Â´ÃªÂ¸Â°" style="display:none;">?ÂÂ¥ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                            <div class="history-dropdown mutation-history-dropdown">
+                                <button id="btn-mutation-history" class="btn btn-sm" title="ÃªÂ²Â??ÃªÂ¸Â°Ã«Â¡Â">??/button>
+                                <div id="mutation-history-menu" class="history-menu" style="display:none;"></div>
+                            </div>
+                        </div>
+                        <p class="tab-description">ÃªÂµÂ¬Ã«ÂÂ???ÂÃ«Â¹?Ã¬Â¡Â°Ã­ÂÂ?ÂÃª? ?ÂÃ¬? ?ÂÃ¬ÂÂ°Ã«Â³Â???ÂÃ¬ÂÂ??Ã¬Â°Â¾Ã¬ÂÂµ?ÂÃ«ÂÂ¤.</p>
+                    </div>
+
+                    <!-- ========== Ã«Â¡ÂÃ¬ÂÂ´?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ ???ÂÃ¬ÂÂ ========== -->
+
+                    <!-- ?ÂÃ¬ÂÂ?ÂÃ¬ÂÂ ??(Ã«Â°Â°Ã¬Â¹Â Ã¬Â²ÂÃ«Â¦Â¬) -->
+                    <div class="tab-pane" id="tab-studio-blackscreen">
+                        <div class="blackscreen-container">
+                            <!-- ?Â¤Ã«ÂÂ -->
+                            <div class="blackscreen-header">
+                                <h2>?ÂÂ¬ ÃªÂ²Â?Â ?ÂÃ«Â©Â´ Ã«Â¹ÂÃ«ÂÂ???ÂÃ¬ÂÂ±</h2>
+                                <p>?Â?Â´Ã«Â¨Â¸ÃªÂ°Â ?Â¬Ã­ÂÂ¨??Ã«Â°Â°ÃªÂ²Â½ ?ÂÃ¬ÂÂ???ÂÃ¬ÂÂ±?Â©Ã«ÂÂ??/p>
+                            </div>
+
+                            <div class="blackscreen-content">
+                                <!-- ?Â¼Ã¬ÂªÂ½: Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° -->
+                                <div class="blackscreen-preview-section">
+                                    <div class="blackscreen-preview-box">
+                                        <canvas id="studio-blackscreen-canvas"></canvas>
+                                    </div>
+                                    <div class="blackscreen-preview-info">
+                                        <span id="blackscreen-preview-resolution">1920 x 1080</span>
+                                        <span id="blackscreen-preview-duration">00:01:00</span>
+                                    </div>
+                                </div>
+
+                                <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? ?Â¤Ã¬Â Â ?Â¨Ã«ÂÂ -->
+                                <div class="blackscreen-settings-section">
+                                    <!-- ÃªÂ¸Â°Ã«Â³Â¸ ?Â¤Ã¬Â Â Ã¬Â¹Â´Ã«ÂÂ -->
+                                    <div class="blackscreen-card">
+                                        <div class="blackscreen-card-title">ÃªÂ¸Â°Ã«Â³Â¸ ?Â¤Ã¬Â Â</div>
+                                        <div class="blackscreen-form-row">
+                                            <label>Ã«Â°Â°ÃªÂ²Â½??/label>
+                                            <div class="blackscreen-color-picker">
+                                                <input type="color" id="studio-bg-color" value="#000000" onchange="studioUpdateBlackscreenPreview()">
+                                                <span id="studio-bg-color-hex">#000000</span>
+                                            </div>
+                                        </div>
+                                        <div class="blackscreen-form-row">
+                                            <label>Ã«Â¹ÂÃ«ÂÂ??ÃªÂ¸Â¸Ã¬ÂÂ´</label>
+                                            <div class="blackscreen-time-inputs">
+                                                <div class="time-input-group">
+                                                    <input type="text" id="studio-video-hours" value="00" maxlength="2"
+                                                           onclick="this.select()"
+                                                           onfocus="this.select()"
+                                                           oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                                           onblur="studioFormatTimeInput(this); studioNormalizeTime()">
+                                                    <span>??/span>
+                                                </div>
+                                                <div class="time-input-group">
+                                                    <input type="text" id="studio-video-minutes" value="01" maxlength="2"
+                                                           onclick="this.select()"
+                                                           onfocus="this.select()"
+                                                           oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                                           onblur="studioFormatTimeInput(this); studioNormalizeTime()">
+                                                    <span>Ã«Â¶?/span>
+                                                </div>
+                                                <div class="time-input-group">
+                                                    <input type="text" id="studio-video-seconds" value="00" maxlength="2"
+                                                           onclick="this.select()"
+                                                           onfocus="this.select()"
+                                                           oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                                           onblur="studioFormatTimeInput(this); studioNormalizeTime()">
+                                                    <span>Ã¬Â´?/span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="blackscreen-form-row">
+                                            <label>?Â´Ã¬ÂÂ??/label>
+                                            <select id="studio-blackscreen-resolution" onchange="studioUpdateBlackscreenPreview()">
+                                                <option value="1920x1080">1920x1080 (Full HD)</option>
+                                                <option value="1280x720">1280x720 (HD)</option>
+                                                <option value="3840x2160">3840x2160 (4K)</option>
+                                                <option value="1080x1920">1080x1920 (?Â¸Ã«Â¡Â)</option>
+                                                <option value="1080x1080">1080x1080 (?ÂÃ¬ÂÂ¬ÃªÂ°?</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?Â?Â´Ã«Â¨Â¸ ?Â¤Ã¬Â Â Ã¬Â¹Â´Ã«ÂÂ -->
+                                    <div class="blackscreen-card">
+                                        <div class="blackscreen-card-title">
+                                            <label class="blackscreen-toggle">
+                                                <input type="checkbox" id="studio-show-timer" onchange="studioToggleTimer()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <span>?Â?Â´Ã«Â¨Â¸ ?ÂÃ¬ÂÂ</span>
+                                        </div>
+                                        <div id="studio-timer-options" class="blackscreen-timer-options" style="display: none;">
+                                            <!-- ?Â?Â´Ã«Â¨Â¸ ?ÂµÃ¬ÂÂ -->
+                                            <div class="blackscreen-form-row">
+                                                <label>?Â?Â´Ã«Â¨Â¸ Ã¬Â¢ÂÃ«Â¥Â</label>
+                                                <select id="studio-timer-type" onchange="studioUpdateBlackscreenPreview()">
+                                                    <option value="countdown">Ã¬Â¹Â´Ã¬ÂÂ´?Â¸Ã«ÂÂ¤??/option>
+                                                    <option value="countup">Ã¬Â¹Â´Ã¬ÂÂ´?Â¸Ã¬ÂÂ</option>
+                                                </select>
+                                            </div>
+                                            <div class="blackscreen-form-row">
+                                                <label>?Â«Ã¬ÂÂ ?Â¤Ã­???/label>
+                                                <select id="studio-digital-font-style" onchange="studioUpdateBlackscreenPreview()">
+                                                    <option value="default">ÃªÂ¸Â°Ã«Â³Â¸</option>
+                                                    <option value="bold">ÃªÂµÂµÃªÂ²Â</option>
+                                                    <option value="thin">?ÂÃªÂ²Â</option>
+                                                    <option value="mono">ÃªÂ³Â Ã¬Â Â??/option>
+                                                    <option value="digital">?ÂÃ¬???(LCD)</option>
+                                                    <option value="neon">?Â¤Ã¬ÂÂ¨</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- ?ÂÃ¬Â¹Â/?Â¬ÃªÂ¸Â°/?ÂÃ¬ÂÂ ?ÂµÃ¬ÂÂ -->
+                                            <div class="blackscreen-form-row">
+                                                <label>?ÂÃ¬Â¹Â</label>
+                                                <select id="studio-timer-position" onchange="studioUpdateBlackscreenPreview()">
+                                                    <option value="center">Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                    <option value="top-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                    <option value="bottom-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                    <option value="top-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                    <option value="top-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                    <option value="bottom-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                    <option value="bottom-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                </select>
+                                            </div>
+                                            <div class="blackscreen-form-row">
+                                                <label>?Â¬ÃªÂ¸Â° <span class="value-display" id="studio-timer-size-value">15%</span></label>
+                                                <div class="size-slider-with-buttons">
+                                                    <button type="button" class="size-adjust-btn" onclick="studioAdjustTimerSize(-1)">??/button>
+                                                    <input type="range" id="studio-timer-size" min="5" max="50" value="15" oninput="studioUpdateTimerSize()">
+                                                    <button type="button" class="size-adjust-btn" onclick="studioAdjustTimerSize(1)">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="blackscreen-form-row">
+                                                <label>?ÂÃ¬ÂÂ</label>
+                                                <div class="blackscreen-color-picker">
+                                                    <input type="color" id="studio-timer-color" value="#ffffff" onchange="studioUpdateBlackscreenPreview()">
+                                                    <span id="studio-timer-color-hex">#FFFFFF</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ã¬Â¶ÂÃ«Â Â¥ ?Â¤Ã¬Â Â Ã¬Â¹Â´Ã«ÂÂ -->
+                                    <div class="blackscreen-card">
+                                        <div class="blackscreen-card-title">Ã¬Â¶ÂÃ«Â Â¥ ?Â¤Ã¬Â Â</div>
+                                        <div class="blackscreen-form-row">
+                                            <label>?Â??ÃªÂ²Â½Ã«Â¡Â</label>
+                                            <div class="blackscreen-path-input">
+                                                <input type="text" id="studio-blackscreen-output" placeholder="?Â?Â¥Ã­ÂÂ  ?ÂÃ¬ÂÂ¼ ÃªÂ²Â½Ã«Â¡ÂÃ«Â¥??Â Ã­ÂÂ?ÂÃ¬ÂÂ¸?? readonly>
+                                                <button onclick="studioSelectBlackscreenOutput()" class="btn-browse">Ã¬Â°Â¾Ã¬ÂÂÃ«Â³Â´ÃªÂ¸Â°</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?Â¡Ã¬ÂÂ Ã«Â²ÂÃ­ÂÂ¼ -->
+                                    <div class="blackscreen-actions">
+                                        <button onclick="studioGenerateBlackscreen()" class="btn-generate" id="studio-blackscreen-start">
+                                            <span class="btn-icon">?ÂÂ¬</span> ?ÂÃ¬ÂÂ±?ÂÃªÂ¸Â°
+                                        </button>
+                                        <button onclick="studioStopBlackscreen()" class="btn-stop" id="studio-blackscreen-stop" disabled>
+                                            <span class="btn-icon">??/span> Ã¬Â¤ÂÃ«ÂÂ¨
+                                        </button>
+                                    </div>
+
+                                    <!-- Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ©Ã«Â°?-->
+                                    <div id="studio-blackscreen-progress" class="blackscreen-progress" style="display: none;">
+                                        <div class="progress-info">
+                                            <span id="studio-blackscreen-progress-label">Ã¬Â¤ÂÃ«Â¹?Ã¬Â¤?..</span>
+                                            <span id="studio-blackscreen-progress-percent">0%</span>
+                                        </div>
+                                        <div class="progress-bar-container">
+                                            <div id="studio-blackscreen-progress-bar" class="progress-bar-fill"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TTS ?ÂÃ¬ÂÂ?Â¸Ã¬ÂÂ ??(Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â°?? -->
+                    <div class="tab-pane active" id="tab-studio-tts-design">
+                        <div class="tts-design-container">
+                            <!-- 1?? ?Â¤Ã«ÂÂ -->
+                            <div class="tts-design-header">
+                                <div class="tts-header-left">
+                                    <h2>?ÂÂÃ¯Â¸?TTS ?ÂÃ«Â Â?Â´Ã¬ÂÂ ?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤</h2>
+                                    <div class="tts-api-usage-inline" id="design-api-status">
+                                        ?Â¬Ã«ÂÂ?Â¨Ã«ÂÂ | Std: 400Ã«Â§?ÃÂ· 2% | Wave: 100Ã«Â§?ÃÂ· 8% | N2: 100Ã«Â§?ÃÂ· 0% | Chirp: 50Ã«Â§?ÃÂ· 0% |
+                                    </div>
+                                </div>
+                                <div class="tts-header-right">
+                                    <button class="tts-icon-btn" onclick="designReset()" title="Ã¬Â´ÂÃªÂ¸Â°??>?ÂÂ</button>
+                                    <button class="tts-icon-btn" onclick="designOpenAPIKeyModal()" title="API ??ÃªÂ´ÂÃ«Â¦?>?ÂÂ</button>
+                                    <button class="tts-icon-btn" onclick="designOpenSettingsModal()" title="?Â¤Ã¬Â Â">?ÂÃ¯Â¸Â</button>
+                                    <button class="tts-icon-btn" onclick="copyAllLogs()" title="Ã«Â¡ÂÃªÂ·Â¸ Ã«Â³ÂµÃ¬ÂÂ¬">?ÂÂ</button>
+                                </div>
+                            </div>
+
+                            <!-- 2?? Ã«Â©ÂÃ¬ÂÂ¸ ?ÂÃ¬ÂÂ´?ÂÃ¬ÂÂ 3??(2:6:2) -->
+                            <div class="tts-design-main tts-3col-layout">
+                                <!-- 1?? Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° + Ã¬Â¶ÂÃ«Â Â¥?Â¤Ã¬Â Â -->
+                                <div class="tts-design-col tts-col-preview-output">
+                                    <!-- ?ÂÃ¬ÂÂ Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° -->
+                                    <div class="tts-section-card tts-unified-preview-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title">?ÂÂ¬ Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â°</span>
+                                            <div class="tts-card-actions">
+                                                <button class="tts-btn-sm" onclick="designSelectBackground()" title="Ã«Â°Â°ÃªÂ²Â½ ?Â´Ã«?Ã¬Â§Â ?Â Ã­ÂÂ">?ÂÂ¼Ã¯Â¸?/button>
+                                                <button class="tts-btn-sm" onclick="designLoadAndAnalyzeScript()" title="?ÂÃ«Â³??Â´ÃªÂ¸Â° Ã«Â°?Ã«Â¶ÂÃ¬ÂÂ">?ÂÂ</button>
+                                                <button class="tts-btn-sm primary" onclick="designPlayCurrentSentence()" title="?ÂÃ¬ÂÂ¬ Ã«Â¬Â¸Ã¬ÂÂ¥ Ã«Â¯Â¸Ã«Â¦Â¬?Â£ÃªÂ¸Â°">?ÂÂ</button>
+                                            </div>
+                                        </div>
+                                        <div class="tts-unified-preview">
+                                            <div class="tts-preview-screen" onclick="designOpenPreviewPopup()" title="?Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¬ ?ÂÃ«?">
+                                                <div class="tts-layer-bg">
+                                                    <img src="" alt="" style="display:none;">
+                                                    <div class="tts-bg-placeholder">?Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¬ ?ÂÃ«?</div>
+                                                </div>
+                                                <div class="tts-layer-eq">
+                                                    <div class="tts-eq-bars">
+                                                        <div class="eq-bar" style="height: 60%;"></div>
+                                                        <div class="eq-bar" style="height: 80%;"></div>
+                                                        <div class="eq-bar" style="height: 45%;"></div>
+                                                        <div class="eq-bar" style="height: 90%;"></div>
+                                                        <div class="eq-bar" style="height: 70%;"></div>
+                                                        <div class="eq-bar" style="height: 55%;"></div>
+                                                        <div class="eq-bar" style="height: 85%;"></div>
+                                                        <div class="eq-bar" style="height: 40%;"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="tts-layer-subtitle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ÂÃ¬ÂÂ ?Â¤Ã¬Â Â -->
+                                    <div class="tts-section-card tts-output-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title">?ÂÂ ?ÂÃ¬ÂÂ</span>
+                                        </div>
+                                        <div class="tts-output-settings">
+                                            <div class="tts-output-row" style="display: flex; align-items: center; gap: 10px;">
+                                                <label style="min-width: 60px;">?Â´Ã¬ÂÂ??</label>
+                                                <select class="tts-resolution" id="design-resolution" style="flex: 1;" onchange="designOutputSettings.resolution = this.value">
+                                                    <option value="1920x1080">1920x1080</option>
+                                                    <option value="1280x720">1280x720</option>
+                                                    <option value="3840x2160">3840x2160</option>
+                                                </select>
+                                            </div>
+                                            <div class="tts-output-options" style="display: flex; gap: 20px; align-items: center; margin: 8px 0;">
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">?ÂÃ¬ÂÂ</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-video" onchange="designOutputSettings.video = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">MP3</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-mp3" checked onchange="designOutputSettings.mp3 = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">?Â¬Ã«ÂªÂEQ</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-eq" onchange="designOutputSettings.transparentEQ = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                            </div>
+                                            <div class="tts-output-row" style="padding-top: 8px; border-top: 1px solid #333; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                                                <span style="font-weight: 600;">?? YouTube ?ÂÃ«ÂÂ ?ÂÃ«Â¡Â??/span>
+                                                <label class="popup-toggle">
+                                                    <input type="checkbox" id="design-youtube-auto-upload">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="tts-output-row" id="design-youtube-account-row" style="display:none;">
+                                                <label>?ÂÃ«Â¡Â??ÃªÂ³ÂÃ¬Â Â:</label>
+                                                <select id="design-youtube-account" class="tts-resolution">
+                                                    <option value="">-- ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ÂÃ¬ÂÂ Ã«Â²ÂÃ­ÂÂ¼ -->
+                                    <div class="tts-action-buttons">
+                                        <button class="tts-btn-large primary" onclick="designStartProduction()">?ÂÂ¬ ?ÂÃ¬ÂÂ</button>
+                                    </div>
+
+                                    <!-- Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ -->
+                                    <div class="tts-progress-section" style="display: none;">
+                                        <div class="tts-progress-header">
+                                            <span>?ÂÃ¬ÂÂ Ã¬Â¤ÂÃ«Â¹?Ã¬Â¤?..</span>
+                                            <span>0%</span>
+                                        </div>
+                                        <div class="tts-progress-bar">
+                                            <div class="tts-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <div class="tts-progress-time">ÃªÂ²Â½ÃªÂ³Â¼ ?ÂÃªÂ°Â: 00:00</div>
+                                    </div>
+                                </div>
+
+                                <!-- 2?? ?ÂÃ«Â§Â ?Â¤Ã¬Â Â -->
+                                <div class="tts-design-col tts-col-sentences-only">
+                                    <div class="tts-section-card tts-sentences-card tts-sentences-full">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title" id="design-subtitle-title">?ÂÂ ?ÂÃ«Â§Â ?Â¤Ã¬Â Â</span>
+                                            <div class="tts-card-actions">
+                                                <button class="tts-btn-sm" onclick="designToggleAllClips()">?ÂÃ¬Â²Â´ ?Â Ã­ÂÂ</button>
+                                                <button class="tts-btn-sm primary" onclick="designSaveSRT()">?ÂÂ¾ SRT</button>
+                                            </div>
+                                        </div>
+                                        <div class="tts-sentences-list tts-sentences-scrollable">
+                                            <div class="tts-empty-message">?ÂÃ«Â³Â¸Ã¬ÂÂ Ã«Â¶ÂÃ¬ÂÂ?Â´Ã¬Â£Â¼?Â¸Ã¬ÂÂ.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3?? Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â -->
+                                <div class="tts-design-col tts-col-character">
+                                    <div class="tts-section-card tts-settings-tabs-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title" id="design-character-title">?ÂÂ­ Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ±</span>
+                                            <div style="display: flex; gap: 6px;">
+                                                <button class="tts-btn-sm primary" onclick="designAddCharacterToPreset()" title="Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ±???ÂÃ«Â¦Â¬?ÂÃ¬ÂÂ Ã¬Â¶ÂÃª?">??Ã¬Â¶ÂÃª?</button>
+                                                <button class="tts-btn-sm danger" onclick="designDeleteSelectedCharacter()" title="?Â Ã­ÂÂ??Ã¬ÂºÂÃ«Â¦Â­????Â Â">?ÂÂÃ¯Â¸???Â Â</button>
+                                            </div>
+                                        </div>
+                                        <div id="design-voice-settings-container" class="studio-voice-settings-container design-character-container">
+                                            <div class="studio-empty-notice">?ÂÃ«Â³Â¸Ã¬ÂÂ Ã«Â¶ÂÃ¬ÂÂ?ÂÃ«Â©Â´ Ã¬ÂºÂÃ«Â¦Â­?Â°Ã«Â³Â ?ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description" style="color: #4ade80;">???ÂµÃ­ÂÂ© ?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ - TTS ?ÂÃ¬ÂÂ± ?ÂÃ¬ÂÂ± + ?ÂÃ«Â§Â + EQ ?ÂÃªÂ°Â??/p>
+
+                        <!-- Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° ?ÂÃ«? ?ÂÃ¬ÂÂ -->
+                        <div id="design-preview-popup" class="design-preview-popup" style="display:none;">
+                            <div class="design-popup-overlay" onclick="designClosePreviewPopup()"></div>
+                            <div class="design-popup-content design-popup-vertical">
+                                <div class="design-popup-header">
+                                    <span>?ÂÂ¬ Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° ?Â¸Ã¬Â§Â</span>
+                                    <div class="design-popup-actions">
+                                        <button class="tts-btn-sm" onclick="designSelectBackground()">?ÂÂ¼Ã¯Â¸?Ã«Â°Â°ÃªÂ²Â½</button>
+                                        <button class="tts-btn-sm" onclick="designClosePreviewPopup()">???Â«ÃªÂ¸Â°</button>
+                                    </div>
+                                </div>
+                                <div class="design-popup-body design-popup-body-vertical">
+                                    <!-- ?ÂÃ«ÂÂ¨: Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° ?ÂÃ«Â©Â´ -->
+                                    <div class="design-popup-screen-wrapper">
+                                        <div class="design-popup-screen" id="popup-preview-screen">
+                                            <div class="tts-layer-bg">
+                                                <img src="" alt="" style="display:none;">
+                                            </div>
+                                            <div class="tts-layer-eq popup-eq">
+                                                <div class="tts-eq-bars">
+                                                    <div class="eq-bar" style="height: 60%;"></div>
+                                                    <div class="eq-bar" style="height: 80%;"></div>
+                                                    <div class="eq-bar" style="height: 45%;"></div>
+                                                    <div class="eq-bar" style="height: 90%;"></div>
+                                                    <div class="eq-bar" style="height: 70%;"></div>
+                                                    <div class="eq-bar" style="height: 55%;"></div>
+                                                    <div class="eq-bar" style="height: 85%;"></div>
+                                                    <div class="eq-bar" style="height: 40%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="tts-layer-subtitle popup-subtitle">?ÂÃ«Â§Â ?ÂÃ¬ÂÂ¤??/div>
+                                        </div>
+                                    </div>
+                                    <!-- ?ÂÃ«ÂÂ¨: ?Â¤Ã¬Â Â ?Â¨Ã«ÂÂ (?ÂÃ«Â§Â/EQ ÃªÂ°ÂÃ«Â¡?Ã«Â°Â°Ã¬Â¹Â) -->
+                                    <div class="design-popup-controls-horizontal">
+                                        <!-- ?ÂÃ«Â§Â ?Â¤Ã¬Â Â -->
+                                        <div class="popup-settings-section">
+                                            <div class="popup-section-header">
+                                                <span class="popup-section-title">?ÂÂ¬ ?ÂÃ«Â§Â</span>
+                                                <label class="popup-toggle"><input type="checkbox" id="popup-sub-visible" checked onchange="designToggleSubtitleVisible(this.checked)"><span class="toggle-slider"></span></label>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?Â°Ã­ÂÂ¸</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-sub-font" class="popup-select-sm" onchange="designSetSubtitleFont(this.value)">
+                                                        <option value="Noto Sans KR">Noto Sans KR</option>
+                                                        <option value="Nanum Gothic">?ÂÃ«ÂÂÃªÂ³Â Ã«ÂÂ</option>
+                                                        <option value="Malgun Gothic">Ã«Â§ÂÃ¬?ÃªÂ³Â Ã«ÂÂ</option>
+                                                        <option value="Black Han Sans">ÃªÂ²Â?ÂÃªÂ³Â Ã«ÂÂ</option>
+                                                        <option value="Jua">Ã¬Â£Â¼Ã¬ÂÂ</option>
+                                                        <option value="Do Hyeon">?ÂÃ­ÂÂ</option>
+                                                        <option value="Gothic A1">ÃªÂ³Â Ã«ÂÂ A1</option>
+                                                    </select>
+                                                    <input type="number" id="popup-sub-size" class="popup-input-sm" value="24" min="12" max="72" step="2" onchange="designSetSubtitleSize(this.value)" title="?Â¬ÃªÂ¸Â°">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">ÃªÂ¸Â?ÂÃ¬ÂÂ</span>
+                                                <div class="popup-row-content">
+                                                    <input type="color" id="popup-sub-color" class="popup-color-sm" value="#ffffff" onchange="designSetSubtitleColor(this.value)" title="ÃªÂ¸Â?ÂÃ¬ÂÂ">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?ÂÃ¬Â¹Â</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-sub-position-preset" class="popup-select-sm" onchange="designSetSubPositionPreset(this.value)">
+                                                        <option value="custom">?Â¬Ã¬ÂÂ©??Ã¬Â§Â??/option>
+                                                        <option value="center">Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="top-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="bottom-center" selected>?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="top-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                        <option value="top-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                        <option value="bottom-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                        <option value="bottom-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                    </select>
+                                                    <input type="number" id="popup-sub-x" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupSubtitle(); designSetSubPositionCustom()" title="X">
+                                                    <input type="number" id="popup-sub-y" class="popup-input-sm" value="90" min="0" max="100" onchange="designUpdatePopupSubtitle(); designSetSubPositionCustom()" title="Y">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?Â¬Ã«ÂªÂ??/span>
+                                                <div class="popup-row-content" id="popup-sub-bg-opacity-row">
+                                                    <input type="color" id="popup-sub-bg" class="popup-color-sm" value="#000000" onchange="designSetSubtitleBg(this.value)" title="Ã«Â°Â°ÃªÂ²Â½??>
+                                                    <input type="number" id="popup-sub-bg-opacity" class="popup-input-sm" value="70" min="0" max="100" step="5" onchange="designSetSubtitleBgOpacity(this.value)" title="?Â¬Ã«ÂªÂ??>
+                                                    <label class="popup-checkbox-sm"><input type="checkbox" id="popup-sub-bg-none" onchange="designToggleSubtitleBgNone(this.checked)">?ÂÃ¬ÂÂ</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- EQ ?Â¤Ã¬Â Â -->
+                                        <div class="popup-settings-section">
+                                            <div class="popup-section-header">
+                                                <span class="popup-section-title">?ÂÂµ EQ</span>
+                                                <label class="popup-toggle"><input type="checkbox" id="popup-eq-visible" onchange="designToggleEQVisible(this.checked)"><span class="toggle-slider"></span></label>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?Â¤Ã­???/span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-eq-style" class="popup-select-sm" onchange="designSetEQStyle(this.value)">
+                                                        <option value="Ã«Â§ÂÃ«???>Ã«Â§ÂÃ«???/option>
+                                                        <option value="Ã«Â¯Â¸Ã«ÂÂ¬Ã«Â§ÂÃ«???>Ã«Â¯Â¸Ã«ÂÂ¬Ã«Â§ÂÃ«???/option>
+                                                        <option value="?ÂÃ­ÂÂ">?ÂÃ­ÂÂ (??</option>
+                                                        <option value="?ÂÃ­ÂÂ">?ÂÃ­ÂÂ</option>
+                                                    </select>
+                                                </div>
+                                                <span class="popup-row-label">?ÂÃ¬ÂÂ</span>
+                                                <div class="popup-row-content">
+                                                    <input type="color" id="popup-eq-color1" class="popup-color-sm" value="#667eea" onchange="designSetEQColor(this.value, document.getElementById('popup-eq-color2').value)" title="?ÂÃ¬ÂÂ1">
+                                                    <input type="color" id="popup-eq-color2" class="popup-color-sm" value="#764ba2" onchange="designSetEQColor(document.getElementById('popup-eq-color1').value, this.value)" title="?ÂÃ¬ÂÂ2">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?ÂÃ¬Â¹Â</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-eq-position-preset" class="popup-select-sm" onchange="designSetEQPositionPreset(this.value)">
+                                                        <option value="custom">?Â¬Ã¬ÂÂ©??Ã¬Â§Â??/option>
+                                                        <option value="center" selected>Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="top-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="bottom-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                        <option value="top-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                        <option value="top-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                        <option value="bottom-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                        <option value="bottom-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                    </select>
+                                                    <input type="number" id="popup-eq-x" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupEQ(); designSetEQPositionCustom()" title="X">
+                                                    <input type="number" id="popup-eq-y" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupEQ(); designSetEQPositionCustom()" title="Y">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">Ã«Â°?ÃªÂ°?ÂÂ</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bars" class="popup-input-sm" value="32" min="4" max="128" step="1" onchange="designClampAndSetBarCount(this)" title="Ã«Â°?ÃªÂ°?ÂÂ">
+                                                </div>
+                                                <span class="popup-row-label">?ÂÃ¬ÂÂ´</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-h" class="popup-input-sm" value="10" min="3" max="200" onchange="designSetEQHeight(this.value)" title="?ÂÃ¬ÂÂ´">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">Ã«Â°?ÃªÂ°ÂÃ«Â¡?/span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bar-width" class="popup-input-sm" value="20" min="1" max="50" onchange="designSetEQBarWidth(this.value)" title="Ã«Â°?ÃªÂ°ÂÃ«Â¡?>
+                                                </div>
+                                                <span class="popup-row-label">Ã«Â°?ÃªÂ°ÂÃªÂ²Â©</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bar-gap" class="popup-input-sm" value="3" min="0" max="20" onchange="designSetEQBarGap(this.value)" title="Ã«Â°?ÃªÂ°ÂÃªÂ²Â©">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- ?ÂÃ¬ÂÂ ?ÂÃ«Â¦Â¬??ÃªÂ´ÂÃ«Â¦??ÂÃ¬ÂÂ -->
+                        <div id="design-preset-popup" class="design-preset-popup" style="display:none;">
+                            <div class="design-popup-overlay" onclick="designClosePresetPopup()"></div>
+                            <div class="design-preset-popup-content">
+                                <div class="design-preset-popup-header">
+                                    <h3 id="design-preset-popup-title">?ÂÂ¬ ???ÂÃ¬ÂÂ ?ÂÃ«Â¦Â¬??Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸?/h3>
+                                    <button class="popup-close-btn" onclick="designClosePresetPopup()">??/button>
+                                </div>
+                                <div class="design-preset-popup-body">
+                                    <!-- ÃªÂ¸Â°Ã«Â³Â¸ ?ÂÃ«Â³Â´ -->
+                                    <div class="preset-section">
+                                        <h4>?ÂÂ ÃªÂ¸Â°Ã«Â³Â¸ ?ÂÃ«Â³Â´</h4>
+                                        <div class="preset-form-row">
+                                            <label>?ÂÃ«Â¦Â¬???Â´Ã«Â¦Â:</label>
+                                            <input type="text" id="preset-name" placeholder="?? ?Â´Ã¬ÂÂ¤ ?ÂÃ¬ÂÂ, ?Â Ã­ÂÂÃ«Â¸??Â¼Ã¬Â¸Â  ??>
+                                        </div>
+                                        <div class="preset-form-row">
+                                            <label>?Â¤Ã«ÂªÂ (?Â Ã­ÂÂ):</label>
+                                            <input type="text" id="preset-description" placeholder="?ÂÃ«Â¦Â¬?ÂÃ¬ÂÂ ?Â??ÃªÂ°ÂÃ«ÂÂ¨???Â¤Ã«ÂªÂ">
+                                        </div>
+                                    </div>
+
+                                    <!-- API ?Â¤Ã¬Â Â -->
+                                    <div class="preset-section">
+                                        <h4>?ÂÂ API ?Â¤Ã¬Â Â</h4>
+                                        <div class="preset-form-row">
+                                            <label>TTS API ??</label>
+                                            <select id="preset-api-key" onchange="presetShowAPIUsage()">
+                                                <option value="">-- API ???Â Ã­ÂÂ --</option>
+                                            </select>
+                                        </div>
+                                        <div id="preset-api-usage" class="preset-api-usage" style="display:none;"></div>
+                                    </div>
+
+                                    <!-- Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â -->
+                                    <div class="preset-section">
+                                        <h4>?ÂÂ¤ Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â</h4>
+                                        <div class="preset-voices-container" id="preset-voices-container">
+                                            <div class="preset-voice-item">
+                                                <div class="preset-voice-header">
+                                                    <input type="text" class="preset-char-name" value="?ÂÃ«Â Â?Â´Ã­ÂÂ°" placeholder="Ã¬ÂºÂÃ«Â¦Â­?Â°Ã«ÂªÂ">
+                                                    <button class="preset-voice-remove" onclick="designRemovePresetVoice(this)" title="??Â Â">??/button>
+                                                </div>
+                                                <div class="preset-voice-settings">
+                                                    <select class="preset-voice-select">
+                                                        <option value="ko-KR-Wavenet-A">ko-KR-Wavenet-A (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Wavenet-B">ko-KR-Wavenet-B (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Wavenet-C">ko-KR-Wavenet-C (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Wavenet-D">ko-KR-Wavenet-D (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Neural2-A">ko-KR-Neural2-A (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Neural2-B">ko-KR-Neural2-B (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Neural2-C">ko-KR-Neural2-C (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Standard-A">ko-KR-Standard-A (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Standard-B">ko-KR-Standard-B (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Standard-C">ko-KR-Standard-C (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Standard-D">ko-KR-Standard-D (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-A">ko-KR-Chirp3-HD-A (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-B">ko-KR-Chirp3-HD-B (?Â¬Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-C">ko-KR-Chirp3-HD-C (?Â¨Ã¬ÂÂ±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-D">ko-KR-Chirp3-HD-D (?Â¨Ã¬ÂÂ±)</option>
+                                                    </select>
+                                                    <div class="preset-voice-params">
+                                                        <label>?ÂÃ«ÂÂ:</label>
+                                                        <div class="param-control">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetRate(this, -0.1)">??/button>
+                                                            <input type="number" class="preset-voice-rate" value="1.0" min="0.5" max="2.0" step="0.1">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetRate(this, 0.1)">+</button>
+                                                        </div>
+                                                        <label>?Â¼Ã¬Â¹Â:</label>
+                                                        <div class="param-control">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetPitch(this, -1)">??/button>
+                                                            <input type="number" class="preset-voice-pitch" value="0" min="-20" max="20" step="1">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetPitch(this, 1)">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="preset-add-voice-btn" onclick="designAddPresetVoice()">??Ã¬ÂºÂÃ«Â¦Â­??Ã¬Â¶ÂÃª?</button>
+                                    </div>
+
+                                </div>
+                                <div class="design-preset-popup-footer">
+                                    <button class="btn btn-secondary" onclick="designClosePresetPopup()">Ã¬Â·Â¨Ã¬ÂÂ</button>
+                                    <button class="btn btn-primary" onclick="designSavePresetFromPopup()">?ÂÂ¾ ?Â??/button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Ã«Â°Â°Ã¬Â¹Â ?ÂÃ¬ÂÂ ??-->
+                    <div class="tab-pane" id="tab-studio-batch">
+                        <div class="batch-container-3col">
+                            <!-- 1?? ?ÂÃ¬ÂÂ Ã«ÂªÂ©Ã«Â¡Â (6fr) -->
+                            <div class="batch-col-main">
+                                <div class="batch-queue-section">
+                                    <div class="batch-queue-header">
+                                        <h3>?ÂÂ ?ÂÃ¬ÂÂ Ã«ÂªÂ©Ã«Â¡Â</h3>
+                                        <div class="batch-queue-actions">
+                                            <button class="btn btn-sm" onclick="batchResetAll()" title="Ã«Â°Â°Ã¬Â¹Â ???ÂÃ¬Â²Â´ Ã¬Â´ÂÃªÂ¸Â°??>?ÂÂ Ã¬Â´ÂÃªÂ¸Â°??/button>
+                                            <button class="btn btn-sm" onclick="batchAddFiles()">?ÂÂ ?ÂÃ¬ÂÂ¼ Ã¬Â¶ÂÃª?</button>
+                                            <button class="btn btn-sm" onclick="batchAddFolder()">?ÂÂ ?Â´Ã«ÂÂ Ã¬Â¶ÂÃª?</button>
+                                            <button class="btn btn-sm" onclick="batchRemoveSelected()">?ÂÂÃ¯Â¸??Â Ã­ÂÂ ??Â Â</button>
+                                            <button class="btn btn-sm" onclick="batchClearAll()">?Â§Â¹ ?ÂÃ¬Â²Â´ ??Â Â</button>
+                                        </div>
+                                    </div>
+                                    <div class="batch-queue-table-container">
+                                        <table class="batch-queue-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;"><input type="checkbox" id="batch-select-all" onchange="batchToggleAll()"></th>
+                                                    <th style="width: 80px;">?ÂÃ­ÂÂ</th>
+                                                    <th style="width: 50px;">Ã«Â²ÂÃ­ÂÂ¸</th>
+                                                    <th>?ÂÃ«Â³??ÂÃ¬ÂÂ¼</th>
+                                                    <th style="width: 180px; text-align: center;">Ã«Â°Â°ÃªÂ²Â½ ?Â´Ã«?Ã¬Â§Â</th>
+                                                    <th style="width: 150px;">YouTube ÃªÂ³ÂÃ¬Â Â</th>
+                                                    <th style="width: 80px;">Ã«Â¬Â¸Ã¬ÂÂ¥ ??/th>
+                                                    <th style="width: 100px;">Ã¬Â§ÂÃ­ÂÂÃ«Â¥?/th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="batch-queue-tbody">
+                                                <tr class="batch-empty-row">
+                                                    <td colspan="8">
+                                                        <div class="batch-empty-message">
+                                                            <span class="batch-empty-icon">?ÂÂ</span>
+                                                            <p>?ÂÃ«Â³??ÂÃ¬ÂÂ¼??Ã¬Â¶ÂÃª??Â´Ã¬Â£Â¼?Â¸Ã¬ÂÂ</p>
+                                                            <p class="batch-empty-hint">?ÂÃ¬ÂÂ¼ Ã¬Â¶ÂÃª? ?ÂÃ«ÂÂ ?Â´Ã«ÂÂ Ã¬Â¶ÂÃª? Ã«Â²ÂÃ­ÂÂ¼???Â´Ã«Â¦Â­?ÂÃªÂ±Â°?? ?ÂÃ¬ÂÂ¼???ÂÃ«ÂÂÃªÂ·Â¸Ã­ÂÂ???ÂÃ¬ÂÂ¼?Â¸Ã¬ÂÂ</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2?? ÃªÂ³ÂµÃ­ÂÂµ ?Â¤Ã¬Â Â (2fr) -->
+                            <div class="batch-col-settings">
+                                <div class="batch-settings-panel">
+                                    <!-- Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ± ?Â¹Ã¬ÂÂ -->
+                                    <div class="batch-setting-group">
+                                        <div class="tts-card-header" style="margin-bottom: 12px;">
+                                            <span class="tts-card-title" id="batch-character-title">?ÂÂ­ Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ±</span>
+                                            <div style="display: flex; gap: 6px;">
+                                                <button class="tts-btn-sm primary" onclick="designAddCharacterToPreset()" title="Ã¬ÂºÂÃ«Â¦Â­???ÂÃ¬ÂÂ±???ÂÃ«Â¦Â¬?ÂÃ¬ÂÂ Ã¬Â¶ÂÃª?">??Ã¬Â¶ÂÃª?</button>
+                                                <button class="tts-btn-sm danger" onclick="designDeleteSelectedCharacter()" title="?Â Ã­ÂÂ??Ã¬ÂºÂÃ«Â¦Â­????Â Â">?ÂÂÃ¯Â¸???Â Â</button>
+                                            </div>
+                                        </div>
+                                        <div id="batch-voice-settings-container" class="studio-voice-settings-container design-character-container">
+                                            <div class="studio-empty-notice">?ÂÃ«Â³Â¸Ã¬ÂÂ Ã«Â¶ÂÃ¬ÂÂ?ÂÃ«Â©Â´ Ã¬ÂºÂÃ«Â¦Â­?Â°Ã«Â³Â ?ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ã«Â°Â°ÃªÂ²Â½ ?Â¤Ã¬Â Â -->
+                                    <div class="batch-setting-group">
+                                        <h4>?ÂÂ¨ Ã«Â°Â°ÃªÂ²Â½ ?Â¤Ã¬Â Â</h4>
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-size: 1.05rem; font-weight: 600;">ÃªÂ³ÂµÃ­ÂÂµ Ã«Â°Â°ÃªÂ²Â½ ?Â¬Ã¬ÂÂ©</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-use-common-bg" onchange="batchToggleCommonBg()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="batch-setting-row" id="batch-common-bg-row">
+                                            <label>ÃªÂ³ÂµÃ­ÂÂµ Ã«Â°Â°ÃªÂ²Â½:</label>
+                                            <div class="batch-file-select">
+                                                <input type="text" id="batch-bg-image" readonly placeholder="ÃªÂ³ÂµÃ­ÂÂµ Ã«Â°Â°ÃªÂ²Â½ ?Â´Ã«?Ã¬Â§Â ?Â Ã­ÂÂ">
+                                                <button class="btn btn-sm" onclick="batchSelectBackground()">Ã¬Â°Â¾ÃªÂ¸Â°</button>
+                                            </div>
+                                        </div>
+                                        <div class="batch-setting-row" id="batch-individual-bg-hint" style="display:none;">
+                                            <span class="batch-hint">ÃªÂ°??ÂÃ«Â³Â¸Ã«Â³Â Ã«Â°Â°ÃªÂ²Â½?Â Ã«ÂªÂ©Ã«Â¡Â?ÂÃ¬ÂÂ ÃªÂ°ÂÃ«Â³Â ?Â¤Ã¬Â Â ÃªÂ°Â??/span>
+                                        </div>
+                                    </div>
+
+                                    <!-- EQ ?Â¹Ã¬ÂÂ -->
+                                    <div class="batch-setting-group batch-compact">
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <span style="font-size: 0.9rem; font-weight: 600;">?ÂÂµ EQ</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-eq-enabled" onchange="batchToggleEQ()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div id="batch-eq-options" style="display: none;">
+                                            <div class="batch-setting-row">
+                                                <label>?Â¤Ã­???/label>
+                                                <select id="batch-eq-style" style="flex: 1;">
+                                                    <option value="Ã«Â§ÂÃ«??? selected>Ã«Â§ÂÃ«???/option>
+                                                    <option value="Ã«Â¯Â¸Ã«ÂÂ¬Ã«Â§ÂÃ«???>Ã«Â¯Â¸Ã«ÂÂ¬ Ã«Â§ÂÃ«???/option>
+                                                    <option value="?ÂÃ­ÂÂÃ«Â§ÂÃ«???>?ÂÃ­ÂÂ Ã«Â§ÂÃ«???/option>
+                                                    <option value="?ÂÃ­ÂÂ">?ÂÃ­ÂÂ</option>
+                                                </select>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?ÂÃ¬ÂÂ</label>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <input type="color" id="batch-eq-color1" value="#667eea" style="width: 60px;">
+                                                    <input type="color" id="batch-eq-color2" value="#764ba2" style="width: 60px;">
+                                                </div>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?ÂÃ¬Â¹Â</label>
+                                                <select id="batch-eq-position" style="flex: 1;">
+                                                    <option value="bottom-center" selected>?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                    <option value="top-center">?ÂÃ«ÂÂ¨ Ã¬Â¤ÂÃ¬ÂÂ</option>
+                                                    <option value="center">?ÂÃ¬Â¤Â??/option>
+                                                    <option value="bottom-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                    <option value="bottom-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                    <option value="top-left">?ÂÃ«ÂÂ¨ Ã¬Â¢ÂÃ¬Â¸Â¡</option>
+                                                    <option value="top-right">?ÂÃ«ÂÂ¨ ?Â°Ã¬Â¸Â¡</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ÂÃ«Â§Â ?Â¹Ã¬ÂÂ -->
+                                    <div class="batch-setting-group batch-compact">
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <span style="font-size: 0.9rem; font-weight: 600;">?ÂÂ¬ ?ÂÃ«Â§Â</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-subtitle-enabled" onchange="batchToggleSubtitle()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div id="batch-subtitle-options" style="display: none;">
+                                            <div class="batch-setting-row">
+                                                <label>?Â°Ã­ÂÂ¸</label>
+                                                <select id="batch-subtitle-font" style="flex: 1;">
+                                                    <option value="Noto Sans KR" selected>Noto Sans KR</option>
+                                                    <option value="Malgun Gothic">Ã«Â§ÂÃ¬? ÃªÂ³Â Ã«ÂÂ</option>
+                                                    <option value="NanumGothic">?ÂÃ«ÂÂÃªÂ³Â Ã«ÂÂ</option>
+                                                </select>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?Â¬ÃªÂ¸Â°</label>
+                                                <input type="number" id="batch-subtitle-size" value="24" min="12" max="72" style="width: 80px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3?? ?Â¤Ã­ÂÂ & Ã«Â¡ÂÃªÂ·Â¸ (2fr) -->
+                            <div class="batch-col-executor">
+                                <!-- ?ÂÃ¬ÂÂ ?Â¤Ã¬Â Â Ã«Â°??Â¤Ã­ÂÂ -->
+                                <div class="batch-executor-panel">
+                                    <h4>?ÂÂ ?ÂÃ¬ÂÂ</h4>
+                                    <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="min-width: 60px;">?Â´Ã¬ÂÂ??</label>
+                                        <select id="batch-resolution" style="flex: 1;">
+                                            <option value="1920x1080" selected>1920x1080</option>
+                                            <option value="1280x720">1280x720</option>
+                                            <option value="3840x2160">3840x2160</option>
+                                        </select>
+                                    </div>
+                                    <div class="batch-output-options" style="display: flex; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>?ÂÃ¬ÂÂ</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-video">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>MP3</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-mp3" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>?Â¬Ã«ÂªÂEQ</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-transparent-eq">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                    </div>
+                                    <div class="batch-setting-row" style="padding-top: 8px; border-top: 1px solid #333; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-weight: 600;">?? YouTube ?ÂÃ«ÂÂ ?ÂÃ«Â¡Â??/span>
+                                        <label class="popup-toggle">
+                                            <input type="checkbox" id="batch-youtube-auto-upload">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="batch-setting-row" id="batch-youtube-account-row" style="display:none;">
+                                        <label>?ÂÃ«Â¡Â??ÃªÂ³ÂÃ¬Â Â:</label>
+                                        <select id="batch-youtube-account" class="batch-select" onchange="batchLoadYouTubeChannels()">
+                                            <option value="">-- ÃªÂ³ÂÃ¬Â Â ?Â Ã­ÂÂ --</option>
+                                        </select>
+                                    </div>
+                                    <div class="batch-setting-row" id="batch-youtube-channel-row" style="display:none;">
+                                        <label>?ÂÃ«Â¡Â??Ã¬Â±ÂÃ«ÂÂ:</label>
+                                        <select id="batch-youtube-channel" class="batch-select">
+                                            <option value="">-- Ã¬Â±ÂÃ«ÂÂ ?Â Ã­ÂÂ --</option>
+                                        </select>
+                                    </div>
+                                    <input type="hidden" id="batch-youtube-privacy" value="private">
+
+                                    <div class="batch-executor-buttons">
+                                        <button class="btn btn-lg btn-primary" id="batch-start-btn" onclick="batchStartProduction()">
+                                            ?Â¶Ã¯Â¸Â Ã«Â°Â°Ã¬Â¹Â ?ÂÃ¬ÂÂ ?ÂÃ¬ÂÂ
+                                        </button>
+                                        <button class="btn btn-lg btn-secondary" id="batch-stop-btn" onclick="batchStopProduction()" disabled>
+                                            ?Â¹Ã¯Â¸Â Ã¬Â¤ÂÃ¬?
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ© -->
+                                <div class="batch-progress-panel">
+                                    <h4>?ÂÂ Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ©</h4>
+                                    <div class="batch-progress-stats-compact">
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?ÂÃ¬Â²Â´ ?ÂÃ¬ÂÂ</div>
+                                            <div style="font-size: 18px; font-weight: bold;"><span id="batch-total-count">0ÃªÂ°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?ÂÃ«Â£Â</div>
+                                            <div style="font-size: 18px; font-weight: bold; color: #4caf50;"><span id="batch-done-count">0ÃªÂ°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?Â¤Ã­ÂÂ¨</div>
+                                            <div style="font-size: 18px; font-weight: bold; color: #f44336;"><span id="batch-fail-count">0ÃªÂ°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">ÃªÂ²Â½ÃªÂ³Â¼ ?ÂÃªÂ°Â</div>
+                                            <div style="font-size: 18px; font-weight: bold;"><span id="batch-elapsed-time">00:00:00</span></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 12px;">
+                                        <div class="batch-progress-bar-container" style="background: #333; border-radius: 10px; overflow: hidden; height: 6px;">
+                                            <div class="batch-progress-bar" id="batch-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                                        </div>
+                                        <div class="batch-progress-text" id="batch-progress-text" style="text-align: center; margin-top: 8px; color: #999; font-size: 12px;">?ÂÃªÂ¸?Ã¬Â¤?/div>
+                                    </div>
+                                </div>
+
+                                <!-- Ã«Â¡ÂÃªÂ·Â¸ -->
+                                <div class="batch-log-panel">
+                                    <h4>?ÂÂ Ã«Â¡ÂÃªÂ·Â¸</h4>
+                                    <div class="batch-log-output" id="batch-log-output">
+                                        <div class="log-line" style="color: #888;">Ã«Â¡ÂÃªÂ·Â¸ÃªÂ°Â ?Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??..</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- YouTube ÃªÂ³ÂÃ¬Â Â ÃªÂ´ÂÃ«Â¦???-->
+                    <div class="tab-pane" id="tab-studio-youtube">
+                        <div class="youtube-container">
+                            <div class="youtube-header">
+                                <h2>?ÂÂº YouTube ÃªÂ³ÂÃ¬Â Â ÃªÂ´ÂÃ«Â¦?/h2>
+                                <p class="youtube-description">Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ??ÃªÂ´ÂÃ«Â¦Â¬Ã­ÂÂ??Ã«ÂªÂ¨Ã«ÂÂ  YouTube Ã¬Â±ÂÃ«ÂÂ???ÂÃ«Â¡Â?ÂÃ­ÂÂ  ???ÂÃ¬ÂÂµ?ÂÃ«ÂÂ¤.</p>
+                            </div>
+
+                            <!-- client_secrets.json ?Â¤Ã¬Â Â -->
+                            <div class="youtube-setup-section">
+                                <div class="youtube-setup-card">
+                                    <h3>?ÂÃ¯Â¸Â Ã¬Â´ÂÃªÂ¸Â° ?Â¤Ã¬Â Â</h3>
+                                    <p>Ã¬Â²ÂÃ¬ÂÂ ?Â¬Ã¬ÂÂ© ??Google Cloud Console?ÂÃ¬ÂÂ ?Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ??<code>client_secrets.json</code> ?ÂÃ¬ÂÂ¼???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</p>
+                                    <button class="btn btn-secondary" onclick="youtubeSetupClientSecrets()">client_secrets.json ?Â¤Ã¬Â Â</button>
+                                </div>
+                            </div>
+
+                            <!-- ÃªÂ³ÂÃ¬Â Â Ã«ÂªÂ©Ã«Â¡Â -->
+                            <div class="youtube-accounts-section">
+                                <div class="youtube-accounts-header">
+                                    <h3>?ÂÂ ?Â±Ã«Â¡Â??ÃªÂ³ÂÃ¬Â Â</h3>
+                                    <button class="btn btn-primary" onclick="youtubeAddAccount()">????ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?</button>
+                                </div>
+                                <div id="youtube-accounts-list" class="youtube-accounts-list">
+                                    <!-- ÃªÂ³ÂÃ¬Â Â Ã«ÂªÂ©Ã«Â¡Â???Â¬ÃªÂ¸Â°???ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã¬Â¶ÂÃª???-->
+                                    <div class="youtube-empty-state">
+                                        <p style="color:#888;">?Â±Ã«Â¡Â??ÃªÂ³ÂÃ¬Â Â???ÂÃ¬ÂÂµ?ÂÃ«ÂÂ¤</p>
+                                        <p style="color:#666; font-size:0.9rem;">??"??ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?" Ã«Â²ÂÃ­ÂÂ¼???Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¬ Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ?Â¸Ã¬ÂÂ.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ÃªÂ´ÂÃ«Â¦?Ã¬Â±ÂÃ«ÂÂ Ã«ÂªÂ©Ã«Â¡Â -->
+                            <div class="youtube-channels-section" id="youtube-channels-section" style="display:none;">
+                                <div class="youtube-channels-header">
+                                    <h3>?ÂÂ <span id="youtube-channels-account-name"></span> ÃªÂ³ÂÃ¬Â Â??ÃªÂ´ÂÃ«Â¦?Ã¬Â±ÂÃ«ÂÂ</h3>
+                                    <button class="btn btn-secondary" onclick="youtubeCloseChannelsList()">???Â«ÃªÂ¸Â°</button>
+                                </div>
+                                <div class="youtube-channels-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Ã¬Â´?Ã¬Â±ÂÃ«ÂÂ ??</span>
+                                        <span class="stat-value" id="youtube-total-channels">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Ã«Â³Â¸Ã¬ÂÂ¸ Ã¬Â±ÂÃ«ÂÂ:</span>
+                                        <span class="stat-value" id="youtube-owned-channels">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ÃªÂ´ÂÃ«Â¦?Ã¬Â¤ÂÃ¬ÂÂ¸ Ã¬Â±ÂÃ«ÂÂ:</span>
+                                        <span class="stat-value" id="youtube-managed-channels">0</span>
+                                    </div>
+                                </div>
+                                <div id="youtube-channels-list" class="youtube-channels-grid">
+                                    <!-- Ã¬Â±ÂÃ«ÂÂ Ã¬Â¹Â´Ã«ÂÂÃªÂ°Â ?Â¬ÃªÂ¸Â°???ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã¬Â¶ÂÃª???-->
+                                </div>
+                            </div>
+
+                            <!-- ?Â¬Ã¬ÂÂ© ?ÂÃ«ÂÂ´ -->
+                            <div class="youtube-guide-section">
+                                <h3>?ÂÂ ?Â¬Ã¬ÂÂ© Ã«Â°Â©Ã«Â²Â</h3>
+                                <div class="youtube-guide-steps">
+                                    <div class="youtube-guide-step">
+                                        <span class="step-number">1</span>
+                                        <div class="step-content">
+                                            <h4>Ã¬Â´ÂÃªÂ¸Â° ?Â¤Ã¬Â Â</h4>
+                                            <p>Google Cloud Console?ÂÃ¬ÂÂ OAuth 2.0 ?Â´Ã«ÂÂ¼?Â´Ã¬ÂÂ¸?Â¸Ã«? ?ÂÃ¬ÂÂ±?ÂÃªÂ³Â  <code>client_secrets.json</code> ?ÂÃ¬ÂÂ¼???Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ?Â©Ã«ÂÂ??</p>
+                                        </div>
+                                    </div>
+                                    <div class="youtube-guide-step">
+                                        <span class="step-number">2</span>
+                                        <div class="step-content">
+                                            <h4>ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?</h4>
+                                            <p>"??ÃªÂ³ÂÃ¬Â Â Ã¬Â¶ÂÃª?" Ã«Â²ÂÃ­ÂÂ¼???Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¬ Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ©?ÂÃ«ÂÂ¤. Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ ÃªÂ³ÂÃ¬Â Â??ÃªÂ´ÂÃ«Â¦Â¬Ã­ÂÂ??Ã«ÂªÂ¨Ã«ÂÂ  Ã¬Â±ÂÃ«ÂÂ ?ÂÃ«Â³Â´ÃªÂ°Â ?ÂÃ«ÂÂ?Â¼Ã«Â¡Â Ã¬Â¡Â°Ã­ÂÂ?Â©Ã«ÂÂ??</p>
+                                        </div>
+                                    </div>
+                                    <div class="youtube-guide-step">
+                                        <span class="step-number">3</span>
+                                        <div class="step-content">
+                                            <h4>Ã«Â°Â°Ã¬Â¹Â ?ÂÃ«Â¡Â??/h4>
+                                            <p>"Ã«Â°Â°Ã¬Â¹Â" ??ÂÂ??YouTube ?ÂÃ«ÂÂ ?ÂÃ«Â¡Â?ÂÃ«? ?ÂÃ¬ÂÂ±?ÂÃ­ÂÂÃªÂ³? ÃªÂ³ÂÃ¬Â ÂÃªÂ³?Ã¬Â±ÂÃ«ÂÂ???Â Ã­ÂÂ?ÂÃ¬ÂÂ¬ ?ÂÃ¬ÂÂ???ÂÃ«Â¡Â?ÂÃ­ÂÂ  ???ÂÃ¬ÂÂµ?ÂÃ«ÂÂ¤.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ã¬Â±ÂÃ«ÂÂ ÃªÂ´ÂÃ«Â¦???-->
+                    <div class="tab-pane" id="tab-studio-channel-manager">
+                        <div class="channel-manager-container">
+                            <div class="channel-manager-header">
+                                <h2>?ÂÂ Ã¬Â±ÂÃ«ÂÂ ÃªÂ´ÂÃ«Â¦?/h2>
+                                <p class="channel-manager-description">Ã¬Â±ÂÃ«ÂÂ URL??Ã¬Â¶ÂÃª??ÂÃ¬ÂÂ¬ ÃªÂµÂ¬Ã«ÂÂ???? Ã¬Â¡Â°Ã­ÂÂ???Â±Ã¬ÂÂ Ã«ÂªÂ¨Ã«ÂÂ?Â°Ã«Â§Â?ÂÃ¬ÂÂ¸??/p>
+                            </div>
+
+                            <!-- Ã¬Â±ÂÃ«ÂÂ Ã¬Â¶ÂÃª? Ã«Â²ÂÃ­ÂÂ¼ -->
+                            <div class="channel-manager-actions">
+                                <button class="btn btn-primary" onclick="channelManagerAddChannel()">??Ã¬Â±ÂÃ«ÂÂ Ã¬Â¶ÂÃª?</button>
+                                <button class="btn btn-secondary" onclick="channelManagerRefreshAll()">?ÂÂ ?ÂÃ¬Â²Â´ ?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨</button>
+                            </div>
+
+                            <!-- Ã¬Â±ÂÃ«ÂÂ Ã«ÂªÂ©Ã«Â¡Â -->
+                            <div class="channel-manager-list" id="channel-manager-list">
+                                <div class="channel-manager-empty">
+                                    <p style="color:#888;">?Â±Ã«Â¡Â??Ã¬Â±ÂÃ«ÂÂ???ÂÃ¬ÂÂµ?ÂÃ«ÂÂ¤</p>
+                                    <p style="color:#666; font-size:0.9rem;">"Ã¬Â±ÂÃ«ÂÂ Ã¬Â¶ÂÃª?" Ã«Â²ÂÃ­ÂÂ¼???Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¬ Ã«ÂªÂ¨Ã«ÂÂ?Â°Ã«Â§Â??Ã¬Â±ÂÃ«ÂÂ??Ã¬Â¶ÂÃª??ÂÃ¬ÂÂ¸??/p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========== Ã«Â¡ÂÃ¬ÂÂ´?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ ????========== -->
+
+                    <!-- Ã¬Â±ÂÃ«ÂÂÃªÂµÂ¬Ã«ÂÂ ??-->
+                    <div class="tab-pane" id="tab-batch-subscribe">
+                        <div class="batch-subscribe-container">
+                            <div class="batch-subscribe-section">
+                                <h3>?ÂÂ ?ÂÃ¬? ?ÂÃ¬ÂÂ¼?ÂÃ¬ÂÂ Ã¬Â±ÂÃ«ÂÂ URL ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?/h3>
+                                <div class="batch-subscribe-form">
+                                    <div class="form-row">
+                                        <button id="btn-select-excel" class="btn btn-primary">?ÂÃ¬? ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ</button>
+                                        <span id="excel-file-count" class="file-count">?Â Ã­ÂÂ???ÂÃ¬ÂÂ¼ ?ÂÃ¬ÂÂ</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>?Â Ã«Â²ÂÃ¬ÂÂ:</label>
+                                        <input type="text" id="cell-range" value="A2:A100" placeholder="?? A2:A100 ?ÂÃ«ÂÂ A1:B5, A10:B15">
+                                        <span class="hint">?Â¬Ã«ÂÂ¬ Ã«Â²ÂÃ¬ÂÂ???Â¼Ã­ÂÂÃ«Â¡?ÃªÂµÂ¬Ã«Â¶Â (?? A1:B5, A10:B15)</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <button id="btn-extract-cells" class="btn btn-secondary">?Â ?Â°Ã¬ÂÂ´??Ã¬Â¶ÂÃ¬Â¶Â</button>
+                                        <span id="extract-cell-result" class="extract-result"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="batch-subscribe-section">
+                                <h3>?ÂÂ Ã¬Â§ÂÃ¬Â Â URL ?ÂÃ«Â Â¥</h3>
+                                <div class="batch-subscribe-form">
+                                    <textarea id="direct-urls" placeholder="Ã¬Â±ÂÃ«ÂÂ URL????Ã¬Â¤ÂÃ¬ÂÂ ?ÂÃ«ÂÂ???ÂÃ«Â Â¥?ÂÃ¬ÂÂ¸??&#10;??&#10;https://www.youtube.com/@Ã¬Â±ÂÃ«ÂÂ?Â¸Ã«ÂÂ¤&#10;https://www.youtube.com/channel/UC...&#10;@Ã¬Â±ÂÃ«ÂÂ?Â¸Ã«ÂÂ¤"></textarea>
+                                    <div class="form-row">
+                                        <button id="btn-add-direct-urls" class="btn btn-secondary">URL Ã¬Â¶ÂÃª?</button>
+                                        <button id="btn-resolve-channels" class="btn btn-primary">Ã¬Â±ÂÃ«ÂÂ ID Ã¬Â¡Â°Ã­ÂÂ</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="batch-subscribe-section">
+                                <h3>?ÂÂ Ã¬Â¡Â°Ã­ÂÂ??Ã¬Â±ÂÃ«ÂÂ Ã«ÂªÂ©Ã«Â¡Â <span id="channel-list-count">(0ÃªÂ°?</span></h3>
+                                <div class="channel-list-container">
+                                    <div id="extracted-channel-list" class="extracted-channel-list">
+                                        <p class="empty-message">?ÂÃ¬? ?ÂÃ¬ÂÂ¼?ÂÃ¬ÂÂ URL??Ã¬Â¶ÂÃ¬Â¶Â?ÂÃªÂ±Â°??Ã¬Â§ÂÃ¬Â Â ?ÂÃ«Â Â¥ ??'Ã¬Â±ÂÃ«ÂÂ ID Ã¬Â¡Â°Ã­ÂÂ' Ã«Â²ÂÃ­ÂÂ¼???Â´Ã«Â¦Â­?ÂÃ¬ÂÂ¸??</p>
+                                    </div>
+                                </div>
+                                <div class="form-row action-buttons">
+                                    <button id="btn-subscribe-all" class="btn btn-primary" disabled>?Â¼ÃªÂ´Â ÃªÂµÂ¬Ã«ÂÂ</button>
+                                    <button id="btn-clear-channels" class="btn btn-danger" disabled>Ã«ÂªÂ©Ã«Â¡Â Ã¬Â´ÂÃªÂ¸Â°??/button>
+                                </div>
+                            </div>
+
+                            <!-- ÃªÂµÂ¬Ã«ÂÂ Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ© -->
+                            <div class="batch-subscribe-section" id="subscribe-progress-section" style="display:none;">
+                                <h3>??ÃªÂµÂ¬Ã«ÂÂ Ã¬Â§ÂÃ­ÂÂ Ã¬Â¤?/h3>
+                                <div class="subscribe-progress-container">
+                                    <div class="subscribe-progress-bar">
+                                        <div id="subscribe-progress-fill" class="subscribe-progress-fill"></div>
+                                    </div>
+                                    <div class="subscribe-progress-info">
+                                        <span id="subscribe-progress-text">Ã¬Â¤ÂÃ«Â¹?Ã¬Â¤?..</span>
+                                        <span id="subscribe-progress-percent">0%</span>
+                                    </div>
+                                    <div id="subscribe-progress-detail" class="subscribe-progress-detail"></div>
+                                </div>
+                            </div>
+
+                            <div class="batch-subscribe-section" id="subscribe-result-section" style="display:none;">
+                                <h3>??ÃªÂµÂ¬Ã«ÂÂ ÃªÂ²Â°ÃªÂ³Â¼</h3>
+                                <div id="subscribe-result" class="subscribe-result"></div>
+                            </div>
+                        </div>
+                        <p class="tab-description">?ÂÃ¬? ?ÂÃ¬ÂÂ¼ ?ÂÃ«ÂÂ Ã¬Â§ÂÃ¬Â Â ?ÂÃ«Â Â¥??Ã¬Â±ÂÃ«ÂÂ URLÃ«Â¡??Â¼ÃªÂ´Â ÃªÂµÂ¬Ã«ÂÂ?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- Ã«Â¸ÂÃ«Â£Â¨Ã¬ÂµÂÃ¬Â Â????-->
+                    <div class="tab-pane" id="tab-line-break">
+                        <div class="line-break-container">
+                            <!-- ?Â¼Ã¬ÂªÂ½: ?ÂÃ¬ÂÂ¼ ?ÂÃ«Â¡Â??Ã«Â°??Â¤Ã¬Â Â -->
+                            <div class="line-break-left">
+                                <div class="line-break-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¤???ÂÃ¬ÂÂ¼ ?ÂÃ«Â¡Â??/h3>
+                                    <div class="line-break-upload-area" id="line-break-drop-zone">
+                                        <input type="file" id="line-break-file-input" accept=".txt,.docx" style="display:none;">
+                                        <div class="upload-icon">?ÂÂ</div>
+                                        <p>?ÂÃ¬ÂÂ¤???ÂÃ¬ÂÂ¼???ÂÃ«ÂÂÃªÂ·Â¸Ã­ÂÂÃªÂ±Â°Ã«ÂÂ ?Â´Ã«Â¦Â­</p>
+                                        <span class="upload-hint">.txt, .docx ?ÂÃ¬ÂÂ¼ Ã¬Â§Â??/span>
+                                    </div>
+                                    <div class="file-info" id="line-break-file-info" style="display:none;">
+                                        <span id="line-break-file-name"></span>
+                                        <button id="btn-clear-line-break-file" class="btn btn-xs btn-danger">??Â Â</button>
+                                    </div>
+                                </div>
+
+                                <!-- Ã¬ÂµÂÃ¬Â Â???ÂµÃ¬ÂÂ -->
+                                <div class="line-break-section">
+                                    <h3>?ÂÃ¯Â¸Â Ã¬ÂµÂÃ¬Â Â???ÂµÃ¬ÂÂ</h3>
+                                    <div class="subtitle-split-options">
+                                        <div class="option-row">
+                                            <label>ÃªÂ¸Â°Ã¬? ÃªÂ¸Â¸Ã¬ÂÂ´:</label>
+                                            <input type="number" id="subtitle-target-length" value="15" min="5" max="30">
+                                            <span class="option-unit">??/span>
+                                            <span class="option-hint">Ã«ÂªÂ©Ã­ÂÂ ÃªÂ¸Â?ÂÃ¬ÂÂ</span>
+                                        </div>
+                                        <div class="option-row">
+                                            <label>Ã¬ÂµÂÃ¬ÂÂ ÃªÂ¸Â¸Ã¬ÂÂ´:</label>
+                                            <input type="number" id="subtitle-min-length" value="10" min="3" max="15">
+                                            <span class="option-unit">??/span>
+                                            <span class="option-hint">?Â´Ã«Â³Â´??Ã¬Â§Â§Ã¬ÂÂ¼Ã«Â©?Ã«Â³ÂÃ­ÂÂ©</span>
+                                        </div>
+                                        <div class="option-row">
+                                            <label>Ã¬ÂµÂÃ«? ÃªÂ¸Â¸Ã¬ÂÂ´:</label>
+                                            <input type="number" id="subtitle-max-length" value="18" min="15" max="40">
+                                            <span class="option-unit">??/span>
+                                            <span class="option-hint">?Â´Ã«Â³Â´??ÃªÂ¸Â¸Ã«Â©Â´ ÃªÂ°ÂÃ¬Â Â Ã«Â¶ÂÃ­ÂÂ </span>
+                                        </div>
+                                        <div class="option-row">
+                                            <label>?ÂÃ¬ÂÂ Ã«Â²ÂÃ¬ÂÂ:</label>
+                                            <input type="number" id="subtitle-search-range" value="3" min="1" max="10">
+                                            <span class="option-unit">??/span>
+                                            <span class="option-hint">ÃÂ±Ã«Â²ÂÃ¬ÂÂ ???Â¨Ã­ÂÂ´ ?ÂÃ¬ÂÂ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="line-break-actions">
+                                    <button id="btn-convert-line-break" class="btn btn-primary" disabled>Ã¬ÂµÂÃ¬Â Â??/button>
+                                </div>
+                            </div>
+
+                            <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? ÃªÂ²Â°ÃªÂ³Â¼ -->
+                            <div class="line-break-right">
+                                <div class="line-break-section line-break-result-section">
+                                    <div class="result-header">
+                                        <h3>?ÂÂ Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â°</h3>
+                                        <div class="result-actions">
+                                            <button id="btn-copy-line-break" class="btn btn-sm btn-secondary" disabled>Ã«Â³ÂµÃ¬ÂÂ¬</button>
+                                            <button id="btn-download-line-break" class="btn btn-sm btn-secondary" disabled>?Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ</button>
+                                        </div>
+                                    </div>
+                                    <div class="line-break-preview-container">
+                                        <textarea id="line-break-preview" placeholder="Ã«Â³Â?ÂÃ«ÂÂ ?ÂÃ¬ÂÂ¤?Â¸Ãª? ?Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??.. (Ã¬Â§ÂÃ¬Â Â ?ÂÃ¬Â Â ÃªÂ°Â??"></textarea>
+                                    </div>
+                                    <div class="line-break-stats" id="line-break-stats" style="display:none;">
+                                        <span>?ÂÃ«Â³Â¸: <strong id="original-line-count">0</strong>Ã«Â¬Â¸Ã¬ÂÂ¥</span>
+                                        <span>??/span>
+                                        <span>Ã«Â³Â?? <strong id="converted-line-count">0</strong>Ã¬Â¤?/span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description">?ÂÃªÂµÂ­???ÂÃ«Â³Â¸Ã¬ÂÂ ?ÂÃ«? ?Â¨Ã¬ÂÂÃ«Â¡??ÂÃ«ÂÂ Ã«Â¶ÂÃ­ÂÂ ?ÂÃ¬ÂÂ¬ ?Â½ÃªÂ¸Â° Ã¬Â¢ÂÃªÂ²Â ?ÂÃ«Â¦Â¬?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- ?Â?ÂÃ¬Â¶ÂÃ¬Â¶???-->
+                    <div class="tab-pane" id="tab-chat-extract">
+                        <div class="chat-extract-container">
+                            <!-- ?Â¼Ã¬ÂªÂ½: ?ÂÃ¬ÂÂ¼ ?ÂÃ«Â¡Â??Ã«Â°??Â¤Ã¬Â Â -->
+                            <div class="chat-extract-left">
+                                <div class="chat-extract-section">
+                                    <h3>?ÂÂ Ã¬Â¹Â´Ã¬Â¹Â´?Â¤Ã­ÂÂ¡ ?Â???ÂÃ¬ÂÂ¼</h3>
+                                    <div class="chat-extract-upload-area" id="chat-extract-drop-zone">
+                                        <input type="file" id="chat-extract-file-input" accept=".txt,.docx" style="display:none;">
+                                        <div class="upload-icon">?ÂÂ¬</div>
+                                        <p>?Â???Â´Ã«Â³Â´?Â´ÃªÂ¸Â° ?ÂÃ¬ÂÂ¼???ÂÃ«ÂÂÃªÂ·Â¸Ã­ÂÂÃªÂ±Â°Ã«ÂÂ ?Â´Ã«Â¦Â­</p>
+                                        <span class="upload-hint">.txt, .docx ?ÂÃ¬ÂÂ¼ Ã¬Â§Â??/span>
+                                    </div>
+                                    <div class="file-info" id="chat-extract-file-info" style="display:none;">
+                                        <span id="chat-extract-file-name"></span>
+                                        <button id="btn-clear-chat-extract-file" class="btn btn-xs btn-danger">??Â Â</button>
+                                    </div>
+                                </div>
+
+                                <div class="chat-extract-section">
+                                    <h3>?ÂÂ¤ Ã¬Â¶ÂÃ¬Â¶Â???Â?ÂÃ«ÂªÂ</h3>
+                                    <div class="chat-extract-names">
+                                        <input type="text" id="chat-extract-names-input" class="input-field" placeholder="Ã¬Â¶ÂÃ¬Â¶Â???Â?ÂÃ«ÂªÂ???ÂÃ«Â Â¥?ÂÃ¬ÂÂ¸??(?? ?ÂÃªÂ¸Â¸?? ?Â´Ã¬ÂÂ??" />
+                                        <div class="names-hint">?Â¬Ã«ÂÂ¬ Ã«ÂªÂÃ¬ÂÂ Ã¬Â¶ÂÃ¬Â¶Â?ÂÃ«Â Â¤Ã«Â©??Â¼Ã­ÂÂ(,)Ã«Â¡?ÃªÂµÂ¬Ã«Â¶Â?ÂÃ¬ÂÂ¬ ?ÂÃ«Â Â¥?ÂÃ¬ÂÂ¸??</div>
+                                    </div>
+                                </div>
+
+                                <div class="chat-extract-actions">
+                                    <button id="btn-extract-chat" class="btn btn-primary" disabled>Ã¬Â¶ÂÃ¬Â¶Â?ÂÃªÂ¸Â°</button>
+                                </div>
+                            </div>
+
+                            <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? ÃªÂ²Â°ÃªÂ³Â¼ -->
+                            <div class="chat-extract-right">
+                                <div class="chat-extract-section chat-extract-result-section">
+                                    <div class="result-header">
+                                        <h3>?ÂÂ Ã¬Â¶ÂÃ¬Â¶Â ÃªÂ²Â°ÃªÂ³Â¼</h3>
+                                        <div class="result-actions">
+                                            <button id="btn-copy-chat-extract" class="btn btn-sm btn-secondary" disabled>Ã«Â³ÂµÃ¬ÂÂ¬</button>
+                                            <button id="btn-download-chat-extract" class="btn btn-sm btn-secondary" disabled>?Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ</button>
+                                        </div>
+                                    </div>
+                                    <div class="chat-extract-result-container">
+                                        <textarea id="chat-extract-result" readonly placeholder="Ã¬Â¶ÂÃ¬Â¶Â???Â???Â´Ã¬ÂÂ©???Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??.."></textarea>
+                                    </div>
+                                    <div class="chat-extract-stats" id="chat-extract-stats" style="display:none;">
+                                        <span>?ÂÃ¬Â²Â´: <strong id="total-message-count">0</strong>ÃªÂ°?/span>
+                                        <span>??/span>
+                                        <span>Ã¬Â¶ÂÃ¬Â¶Â: <strong id="extracted-message-count">0</strong>ÃªÂ°?/span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description">Ã¬Â¹Â´Ã¬Â¹Â´?Â¤Ã­ÂÂ¡ ?Â???Â´Ã«Â³Â´?Â´ÃªÂ¸Â° ?ÂÃ¬ÂÂ¼?ÂÃ¬ÂÂ ?Â¹Ã¬Â Â ?Â?ÂÃ«ÂªÂ??Ã«Â©ÂÃ¬ÂÂÃ¬Â§ÂÃ«Â§?Ã¬Â¶ÂÃ¬Â¶Â?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- ?ÂÃ¬ÂÂ¤?Â¸Ã­ÂÂ©Ã¬Â¹ÂÃªÂ¸Â° ??-->
+                    <div class="tab-pane" id="tab-text-merge">
+                        <div class="text-merge-container">
+                            <!-- ?Â¼Ã¬ÂªÂ½: ?Â¤Ã¬Â Â Ã«Â°??ÂÃ¬ÂÂ¼ -->
+                            <div class="text-merge-left">
+                                <div class="text-merge-section">
+                                    <h3>?ÂÃ¯Â¸Â ?Â¸Ã­ÂÂ¸ ?Â¤Ã¬Â Â</h3>
+                                    <div class="set-config">
+                                        <label for="files-per-set">?Â¸Ã­ÂÂ¸???ÂÃ¬ÂÂ¼ ??</label>
+                                        <input type="number" id="files-per-set" min="0" max="20" value="3">
+                                        <span class="set-config-hint">0: ?ÂÃ¬ÂÂ¼Ã«Â§ÂÃ«ÂÂ¤ ÃªÂµÂ¬Ã«Â¶Â??/ 1?Â´Ã¬ÂÂ: ?Â´Ã«ÂÂ¹ ?Â«Ã¬ÂÂÃ«Â§ÂÃ­ÂÂ¼ Ã«Â¬Â¶Ã¬ÂÂ</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-merge-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¼ ?ÂÃ«Â¡Â??/h3>
+                                    <div class="text-merge-upload-area" id="text-merge-drop-zone">
+                                        <input type="file" id="text-merge-file-input" accept=".txt,.docx" multiple style="display:none;">
+                                        <div class="upload-icon">?ÂÂ</div>
+                                        <p>?ÂÃ¬ÂÂ¤???ÂÃ¬ÂÂ¼?Â¤Ã¬ÂÂ ?ÂÃ«ÂÂÃªÂ·Â¸Ã­ÂÂÃªÂ±Â°Ã«ÂÂ ?Â´Ã«Â¦Â­</p>
+                                        <span class="upload-hint">.txt, .docx (?Â¬Ã«ÂÂ¬ ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ ÃªÂ°Â??</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-merge-section" id="text-merge-files-section" style="display:none;">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¼ Ã«ÂªÂ©Ã«Â¡Â <span class="files-count-badge" id="files-count-badge">0ÃªÂ°?/span></h3>
+                                    <div class="file-list-controls">
+                                        <button id="btn-sort-files" class="btn btn-sm btn-secondary">?ÂÃ«Â Â¬</button>
+                                        <button id="btn-clear-all-files" class="btn btn-sm btn-danger">?ÂÃ¬Â²Â´ ??Â Â</button>
+                                    </div>
+                                    <div class="file-list-container" id="text-merge-file-list">
+                                        <!-- ?ÂÃ¬ÂÂ¼ Ã«ÂªÂ©Ã«Â¡Â???ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ¬ÂÂ±??-->
+                                    </div>
+                                </div>
+
+                                <div class="text-merge-actions">
+                                    <button id="btn-merge-text" class="btn btn-primary" disabled>?Â©Ã¬Â¹ÂÃªÂ¸?/button>
+                                </div>
+                            </div>
+
+                            <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? ÃªÂ²Â°ÃªÂ³Â¼ -->
+                            <div class="text-merge-right">
+                                <div class="text-merge-section text-merge-result-section">
+                                    <div class="result-header">
+                                        <h3>?ÂÂ ?Â©Ã¬Â¹ÂÃªÂ¸?ÃªÂ²Â°ÃªÂ³Â¼</h3>
+                                        <div class="result-actions">
+                                            <button id="btn-copy-text-merge" class="btn btn-sm btn-secondary" disabled>Ã«Â³ÂµÃ¬ÂÂ¬</button>
+                                            <button id="btn-download-text-merge" class="btn btn-sm btn-secondary" disabled>?Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ</button>
+                                        </div>
+                                    </div>
+                                    <div class="text-merge-result-container">
+                                        <textarea id="text-merge-result" readonly placeholder="?Â©Ã¬Â³ÂÃ¬Â§??ÂÃ¬ÂÂ¤?Â¸Ãª? ?Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??.."></textarea>
+                                    </div>
+                                    <div class="text-merge-stats" id="text-merge-stats" style="display:none;">
+                                        <span>Ã¬Â´??ÂÃ¬ÂÂ¼: <strong id="merge-total-files">0</strong>ÃªÂ°?/span>
+                                        <span>??/span>
+                                        <span>Ã¬Â´??Â¸Ã­ÂÂ¸: <strong id="merge-total-sets">0</strong>ÃªÂ°?/span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description">?Â¬Ã«ÂÂ¬ ?ÂÃ¬ÂÂ¤???ÂÃ¬ÂÂ¼???Â¸Ã­ÂÂ¸ ?Â¨Ã¬ÂÂÃ«Â¡?Ã«Â¬Â¶Ã¬ÂÂ´???ÂÃ«ÂÂ???ÂÃ¬ÂÂ¼Ã«Â¡??Â©Ã¬Â¹Â©?ÂÃ«ÂÂ¤.</p>
+                    </div>
+
+                    <!-- MP3Ã¬Â¶ÂÃ¬Â¶Â ??-->
+                    <div class="tab-pane" id="tab-mp3-extract">
+                        <div class="mp3-extract-container">
+                            <!-- ?Â¼Ã¬ÂªÂ½: ?Â¤Ã¬Â Â Ã«Â°??ÂÃ¬ÂÂ¼ -->
+                            <div class="mp3-extract-left">
+                                <!-- ?ÂÃ¬ÂÂ¤???ÂÃ­ÂÂ -->
+                                <div class="mp3-extract-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¤???ÂÃ­ÂÂ</h3>
+                                    <div class="mp3-status-bar">
+                                        <div class="mp3-status-item">
+                                            <div class="mp3-status-dot" id="ffmpegDot"></div>
+                                            <span>FFmpeg</span>
+                                        </div>
+                                        <div class="mp3-status-item">
+                                            <div class="mp3-status-dot" id="whisperDot"></div>
+                                            <span>Whisper</span>
+                                        </div>
+                                        <div class="mp3-status-item">
+                                            <div class="mp3-status-dot" id="modelDot"></div>
+                                            <span id="modelStatusText">Ã«ÂªÂ¨Ã«ÂÂ¸ Ã«Â¯Â¸Ã«Â¡Â??/span>
+                                        </div>
+                                    </div>
+                                    <div id="ffmpegWarning" class="mp3-warning" style="display:none;">
+                                        ?Â Ã¯Â¸Â FFmpeg Ã«Â¯Â¸Ã¬ÂÂ¤Ã¬Â¹? <a href="https://ffmpeg.org/download.html" target="_blank">?Â¤Ã¬ÂÂ´Ã«Â¡ÂÃ«ÂÂ</a>
+                                    </div>
+                                    <div id="whisperWarning" class="mp3-warning" style="display:none;">
+                                        ?Â Ã¯Â¸Â Whisper Ã«Â¯Â¸Ã¬ÂÂ¤Ã¬Â¹? ?Â°Ã«??? <code>pip install openai-whisper</code>
+                                    </div>
+                                </div>
+
+                                <!-- Whisper Ã«ÂªÂ¨Ã«ÂÂ¸ -->
+                                <div class="mp3-extract-section" id="modelSection">
+                                    <h3>?Â§Â  Whisper Ã«ÂªÂ¨Ã«ÂÂ¸</h3>
+                                    <div class="mp3-model-btns">
+                                        <button class="mp3-model-btn" data-model="tiny">tiny</button>
+                                        <button class="mp3-model-btn" data-model="base">base</button>
+                                        <button class="mp3-model-btn active" data-model="small">small</button>
+                                        <button class="mp3-model-btn" data-model="medium">medium</button>
+                                        <button class="mp3-model-btn" data-model="large">large</button>
+                                    </div>
+                                    <div class="mp3-model-load">
+                                        <button class="btn btn-primary btn-sm" id="btnLoadModel">Ã«ÂªÂ¨Ã«ÂÂ¸ Ã«Â¡ÂÃ«ÂÂ</button>
+                                        <span id="modelLoadStatus" class="mp3-load-status"></span>
+                                    </div>
+                                </div>
+
+                                <!-- ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ -->
+                                <div class="mp3-extract-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ</h3>
+                                    <div class="mp3-btn-group">
+                                        <button class="btn btn-primary btn-sm" id="btnSelectMediaFiles">?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ</button>
+                                        <button class="btn btn-secondary btn-sm" id="btnSelectMediaFolder">?Â´Ã«ÂÂ ?Â Ã­ÂÂ</button>
+                                        <button class="btn btn-secondary btn-sm" id="btnClearMediaFiles">Ã¬Â´ÂÃªÂ¸Â°??/button>
+                                    </div>
+                                    <div class="mp3-file-list" id="mediaFileList"></div>
+                                    <div class="mp3-file-count" id="mediaFileCount"></div>
+                                </div>
+
+                                <!-- ?ÂµÃ¬ÂÂ -->
+                                <div class="mp3-extract-section">
+                                    <h3>?ÂÃ¯Â¸Â ?ÂµÃ¬ÂÂ</h3>
+                                    <div class="mp3-options">
+                                        <label class="mp3-checkbox">
+                                            <input type="checkbox" id="optExtractMp3" checked>
+                                            <span>MP3 Ã¬Â¶ÂÃ¬Â¶Â</span>
+                                        </label>
+                                        <label class="mp3-checkbox">
+                                            <input type="checkbox" id="optTranscribe" checked>
+                                            <span>?ÂÃ¬ÂÂ¤??Ã«Â³Â??/span>
+                                        </label>
+                                    </div>
+                                    <div class="mp3-options-grid">
+                                        <div class="mp3-opt-group">
+                                            <label>Ã«Â¹ÂÃ­ÂÂ¸?ÂÃ¬ÂÂ´??/label>
+                                            <select id="optBitrate">
+                                                <option value="128">128 kbps</option>
+                                                <option value="192" selected>192 kbps</option>
+                                                <option value="256">256 kbps</option>
+                                                <option value="320">320 kbps</option>
+                                            </select>
+                                        </div>
+                                        <div class="mp3-opt-group">
+                                            <label>?Â¸Ã¬ÂÂ´</label>
+                                            <select id="optLanguage">
+                                                <option value="ko" selected>?ÂÃªÂµÂ­??/option>
+                                                <option value="en">?ÂÃ¬ÂÂ´</option>
+                                                <option value="ja">?Â¼Ã«Â³Â¸??/option>
+                                                <option value="zh">Ã¬Â¤ÂÃªÂµÂ­??/option>
+                                                <option value="auto">?ÂÃ«ÂÂ</option>
+                                            </select>
+                                        </div>
+                                        <div class="mp3-opt-group">
+                                            <label>Ã¬Â¶ÂÃ«Â Â¥ ?ÂÃ¬ÂÂ</label>
+                                            <select id="optOutputFormat">
+                                                <option value="txt">?ÂÃ¬ÂÂ¤??(.txt)</option>
+                                                <option value="txt_timestamp">?Â?ÂÃ¬ÂÂ¤?Â¬Ã­ÂÂ ?Â¬Ã­ÂÂ¨</option>
+                                                <option value="srt">?ÂÃ«Â§Â (.srt)</option>
+                                                <option value="json">JSON</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mp3-output-row">
+                                        <label class="mp3-checkbox">
+                                            <input type="checkbox" id="optSameFolder" checked>
+                                            <span>?ÂÃ«Â³Â¸ ?Â´Ã«ÂÂ???Â??/span>
+                                        </label>
+                                    </div>
+                                    <div class="mp3-output-row" id="outputFolderSection" style="display:none;">
+                                        <span>Ã¬Â¶ÂÃ«Â Â¥:</span>
+                                        <div id="outputFolderPath" class="mp3-output-path">?Â Ã­ÂÂ ?ÂÃ«ÂÂ¨</div>
+                                        <button class="btn btn-secondary btn-xs" id="btnSelectOutputFolder">?Â Ã­ÂÂ</button>
+                                    </div>
+                                </div>
+
+                                <!-- ?Â¤Ã­ÂÂ Ã«Â²ÂÃ­ÂÂ¼ -->
+                                <div class="mp3-extract-actions">
+                                    <button class="btn btn-primary" id="btnStartMediaProcessing" disabled>?? Ã«Â³Â???ÂÃ¬ÂÂ</button>
+                                </div>
+                            </div>
+
+                            <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ© Ã«Â°?ÃªÂ²Â°ÃªÂ³Â¼ -->
+                            <div class="mp3-extract-right">
+                                <div class="mp3-extract-section mp3-progress-section">
+                                    <h3>?ÂÂ Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ©</h3>
+                                    <div class="mp3-progress-container">
+                                        <div class="mp3-progress-bar-bg">
+                                            <div class="mp3-progress-bar" id="mediaProgressBar">0%</div>
+                                        </div>
+                                        <div class="mp3-progress-text" id="mediaProgressText">?ÂÃ¬ÂÂ¼???Â Ã­ÂÂ?ÂÃ¬ÂÂ¸??/div>
+                                    </div>
+                                    <div class="mp3-progress-list" id="mediaProgressList">
+                                        <!-- ?ÂÃ¬ÂÂ¼Ã«Â³?Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ©???Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ??-->
+                                    </div>
+                                </div>
+
+                                <!-- ?ÂÃ«Â£Â ?Â¹Ã¬ÂÂ -->
+                                <div class="mp3-extract-section mp3-complete-section" id="mediaCompleteSection" style="display:none;">
+                                    <div class="mp3-complete-icon">??/div>
+                                    <h3>Ã«Â³Â???ÂÃ«Â£Â!</h3>
+                                    <p id="mediaCompleteMsg" class="mp3-complete-msg"></p>
+                                    <div class="mp3-complete-actions">
+                                        <button class="btn btn-primary btn-sm" id="btnOpenOutputFolder">?ÂÂ ?Â´Ã«ÂÂ ?Â´ÃªÂ¸Â°</button>
+                                        <button class="btn btn-secondary btn-sm" id="btnResetMedia">?ÂÂ ?ÂÃ«Â¡Â ?ÂÃ¬ÂÂ</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description">?ÂÃ¬ÂÂ?ÂÃ¬ÂÂ??MP3 ?Â¤Ã«ÂÂ?Â¤Ã«? Ã¬Â¶ÂÃ¬Â¶Â?ÂÃªÂ³Â , Whisper AIÃ«Â¡??ÂÃ¬ÂÂ¤??Ã«Â³Â?ÂÃ¬ÂÂ ?ÂÃ­ÂÂ?Â©Ã«ÂÂ??</p>
+                    </div>
+
+                    <!-- PDF ?ÂÃªÂµÂ¬ ??-->
+                    <div class="tab-pane" id="tab-pdf-utils">
+                        <div class="pdf-utils-container">
+                            <!-- ?Â¼Ã¬ÂªÂ½: ?Â¤Ã¬Â Â -->
+                            <div class="pdf-utils-left">
+                                <!-- Ã«ÂªÂ¨Ã«ÂÂ ?Â Ã­ÂÂ -->
+                                <div class="pdf-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ ?Â Ã­ÂÂ</h3>
+                                    <div class="pdf-mode-btns">
+                                        <button class="pdf-mode-btn active" data-mode="merge" onclick="pdfSetMode('merge')">
+                                            ?ÂÂ PDF ?Â©Ã¬Â¹ÂÃªÂ¸?                                        </button>
+                                        <button class="pdf-mode-btn" data-mode="extract" onclick="pdfSetMode('extract')">
+                                            ?ÂÂ ?ÂÃ¬ÂÂ¤??Ã¬Â¶ÂÃ¬Â¶Â
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ -->
+                                <div class="pdf-section">
+                                    <h3>?ÂÂ ?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ</h3>
+                                    <div class="pdf-btn-group">
+                                        <button class="btn btn-primary btn-sm" onclick="pdfSelectFiles()">?ÂÃ¬ÂÂ¼ ?Â Ã­ÂÂ</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="pdfSelectFolder()">?Â´Ã«ÂÂ ?Â Ã­ÂÂ</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="pdfClearFiles()">Ã¬Â´ÂÃªÂ¸Â°??/button>
+                                    </div>
+                                    <div class="pdf-file-list" id="pdfFileList">
+                                        <div class="pdf-empty-msg">PDF ?ÂÃ¬ÂÂ¼???Â Ã­ÂÂ?Â´Ã¬Â£Â¼?Â¸Ã¬ÂÂ</div>
+                                    </div>
+                                    <div class="pdf-file-actions" id="pdfFileActions" style="display:none;">
+                                        <button class="btn btn-xs" onclick="pdfMoveUp()">Ã¢Â¬ÂÃ¯Â¸Â ?ÂÃ«Â¡Â</button>
+                                        <button class="btn btn-xs" onclick="pdfMoveDown()">Ã¢Â¬ÂÃ¯Â¸Â ?ÂÃ«ÂÂÃ«Â¡?/button>
+                                        <button class="btn btn-xs btn-danger" onclick="pdfRemoveSelected()">?ÂÂÃ¯Â¸???Â Â</button>
+                                    </div>
+                                    <div class="pdf-file-count" id="pdfFileCount"></div>
+                                </div>
+
+                                <!-- Ã¬Â¶ÂÃ«Â Â¥ ?Â¤Ã¬Â Â -->
+                                <div class="pdf-section">
+                                    <h3>?ÂÂ¾ Ã¬Â¶ÂÃ«Â Â¥ ?Â¤Ã¬Â Â</h3>
+                                    <div class="pdf-output-row">
+                                        <label class="pdf-checkbox">
+                                            <input type="checkbox" id="pdfSameFolder" checked onchange="pdfToggleOutputFolder()">
+                                            <span>Ã¬Â²?Ã«Â²ÂÃ¬Â§Â¸ ?ÂÃ¬ÂÂ¼ ?Â´Ã«ÂÂ???Â??/span>
+                                        </label>
+                                    </div>
+                                    <div class="pdf-output-row" id="pdfOutputSection" style="display:none;">
+                                        <span>Ã¬Â¶ÂÃ«Â Â¥ ?Â´Ã«ÂÂ:</span>
+                                        <div id="pdfOutputPath" class="pdf-output-path">?Â Ã­ÂÂ ?ÂÃ«ÂÂ¨</div>
+                                        <button class="btn btn-secondary btn-xs" onclick="pdfSelectOutputFolder()">?Â Ã­ÂÂ</button>
+                                    </div>
+                                    <div class="pdf-output-row" id="pdfMergeNameSection">
+                                        <span>?ÂÃ¬ÂÂ¼Ã«Âª?</span>
+                                        <input type="text" id="pdfOutputName" class="pdf-output-name" placeholder="merged.pdf" value="merged.pdf">
+                                    </div>
+                                </div>
+
+                                <!-- ?Â¤Ã­ÂÂ Ã«Â²ÂÃ­ÂÂ¼ -->
+                                <div class="pdf-actions">
+                                    <button class="btn btn-primary btn-lg" id="btnPdfExecute" onclick="pdfExecute()" disabled>
+                                        ?? ?Â¤Ã­ÂÂ
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ?Â¤Ã«Â¥Â¸Ã¬Âª? ÃªÂ²Â°ÃªÂ³Â¼ -->
+                            <div class="pdf-utils-right">
+                                <div class="pdf-section pdf-result-section">
+                                    <h3>?ÂÂ Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂ©</h3>
+                                    <div class="pdf-progress-container">
+                                        <div class="pdf-progress-bar-bg">
+                                            <div class="pdf-progress-bar" id="pdfProgressBar">0%</div>
+                                        </div>
+                                        <div class="pdf-progress-text" id="pdfProgressText">?ÂÃ¬ÂÂ¼???Â Ã­ÂÂ?ÂÃ¬ÂÂ¸??/div>
+                                    </div>
+                                    <div class="pdf-log" id="pdfLog">
+                                        <!-- Ã«Â¡ÂÃªÂ·Â¸ÃªÂ°Â ?Â¬ÃªÂ¸Â°???ÂÃ¬ÂÂ??-->
+                                    </div>
+                                </div>
+
+                                <!-- ?ÂÃ«Â£Â ?Â¹Ã¬ÂÂ -->
+                                <div class="pdf-section pdf-complete-section" id="pdfCompleteSection" style="display:none;">
+                                    <div class="pdf-complete-icon">??/div>
+                                    <h3>?ÂÃ¬ÂÂ ?ÂÃ«Â£Â!</h3>
+                                    <p id="pdfCompleteMsg" class="pdf-complete-msg"></p>
+                                    <div class="pdf-complete-actions">
+                                        <button class="btn btn-primary btn-sm" onclick="pdfOpenOutputFolder()">?ÂÂ ?Â´Ã«ÂÂ ?Â´ÃªÂ¸Â°</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="pdfReset()">?ÂÂ ?ÂÃ«Â¡Â ?ÂÃ¬ÂÂ</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description">?Â¬Ã«ÂÂ¬ PDF ?ÂÃ¬ÂÂ¼???ÂÃ«ÂÂÃ«Â¡??Â©Ã¬Â¹ÂÃªÂ±Â°Ã«ÂÂ, PDF?ÂÃ¬ÂÂ ?ÂÃ¬ÂÂ¤?Â¸Ã«? Ã¬Â¶ÂÃ¬Â¶Â?Â©Ã«ÂÂ??</p>
+                    </div>
+                </div>
+            </div>
+
+                    <!-- Ã¬Â§ÂÃ­ÂÂ Ã«Â°?-->
+                    <div id="progress-section" class="progress-section" style="display:none;">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="progress-text" class="progress-text">Ã¬Â¤ÂÃ«Â¹?Ã¬Â¤?..</span>
+                        <button id="btn-cancel-search" class="btn btn-sm btn-danger">Ã¬Â¤ÂÃ«ÂÂ¨</button>
+                    </div>
+
+                    <!-- ÃªÂ²Â??ÃªÂ²Â°ÃªÂ³Â¼ -->
+                    <div id="results-section" class="results-section" style="display:none;">
+                        <div class="results-header">
+                            <span>ÃªÂ²Â°ÃªÂ³Â¼ <strong id="results-count"></strong></span>
+                            <input type="text" id="results-filter" class="results-filter" placeholder="?ÂÃ«ÂªÂ© ÃªÂ²Â??..">
+                            <select id="sort-option" class="sort-select">
+                                <option value="views">Ã¬Â¡Â°Ã­ÂÂ??/option>
+                                <option value="date">Ã¬ÂµÂÃ¬ÂÂ </option>
+                                <option value="ratio">?ÂÃ¬ÂÂ°Ã«Â³Â??/option>
+                            </select>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="hide-done">
+                                <span>?ÂÃ«Â£Â ?Â¨ÃªÂ¸Â°ÃªÂ¸?/span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="group-by-channel">
+                                <span>Ã¬Â±ÂÃ«ÂÂÃ«Â³?/span>
+                            </label>
+                            <button id="btn-export-pdf" class="btn btn-sm btn-secondary" onclick="exportThumbnailsToPDF()" title="?Â¸Ã«ÂÂ¤??PDF Ã¬Â¶ÂÃ«Â Â¥">?ÂÂ PDF</button>
+                            <span id="results-stats" class="results-stats"></span>
+                        </div>
+                        <!-- PDF ?ÂÃ¬ÂÂ± Ã¬Â§ÂÃ­ÂÂ ?ÂÃ­ÂÂÃ«Â°?-->
+                        <div id="pdf-progress-container" style="display: none; margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                            <div style="margin-bottom: 5px;">
+                                <span id="pdf-progress-text">PDF ?ÂÃ¬ÂÂ± Ã¬Â¤?..</span>
+                                <span id="pdf-progress-percent" style="float: right; font-weight: bold;">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 20px; background: #ddd; border-radius: 10px; overflow: hidden;">
+                                <div id="pdf-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4CAF50, #45a049); transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <div id="results-list" class="results-list"></div>
+                        <button id="btn-scroll-top" class="btn-scroll-top" style="display:none;">??/button>
+                    </div>
+                </div><!-- content-area -->
+            </div><!-- main-content -->
+        </section>
+    </div>
+
+    <!-- ÃªÂµÂ¬Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂ Ã«ÂªÂ©Ã«Â¡Â ?ÂÃ¬ÂÂ -->
+    <div id="subs-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>ÃªÂµÂ¬Ã«ÂÂ Ã¬Â±ÂÃ«ÂÂ ÃªÂ´ÂÃ«Â¦?<span id="subs-modal-count"></span></h2>
+                <button id="btn-close-subs-modal" class="btn-close">&times;</button>
+            </div>
+            <!-- ÃªÂ·Â¸Ã«Â£Â¹ ÃªÂ¸Â°Ã¬? ?Â¤Ã¬Â Â -->
+            <div class="category-settings">
+                <div class="category-settings-header">
+                    <h3>?ÂÂ ÃªÂµÂ¬Ã«ÂÂ??ÃªÂ·Â¸Ã«Â£Â¹ ÃªÂ¸Â°Ã¬? ?Â¤Ã¬Â Â</h3>
+                    <button id="btn-add-category" class="btn btn-sm">+ ÃªÂ·Â¸Ã«Â£Â¹ Ã¬Â¶ÂÃª?</button>
+                </div>
+                <div class="category-settings-list" id="category-settings-list">
+                    <!-- ?ÂÃ¬Â Â?Â¼Ã«Â¡Â ?ÂÃ«ÂÂÃ«Â§ÂÃ«ÂÂ¨ -->
+                </div>
+                <div class="category-settings-actions">
+                    <button id="btn-save-thresholds" class="btn btn-primary btn-sm">?Â¤Ã¬Â Â ?Â??/button>
+                    <button id="btn-reset-thresholds" class="btn btn-sm">ÃªÂ¸Â°Ã«Â³Â¸ÃªÂ°ÂÃ¬ÂÂ¼Ã«Â¡?Ã¬Â´ÂÃªÂ¸Â°??/button>
+                </div>
+            </div>
+            <div class="modal-toolbar">
+                <button id="btn-export-subs" class="btn btn-sm">?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                <button id="btn-import-subs" class="btn btn-sm">ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?/button>
+                <button id="btn-refresh-subs-modal" class="btn btn-sm">?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨</button>
+                <div class="toolbar-spacer"></div>
+                <button id="btn-select-all" class="btn btn-sm">?ÂÃ¬Â²Â´?Â Ã­ÂÂ</button>
+                <button id="btn-batch-unsubscribe" class="btn btn-sm btn-danger" disabled>ÃªÂµÂ¬Ã«ÂÂÃ¬Â·Â¨Ã¬ÂÂ (<span id="selected-count">0</span>)</button>
+            </div>
+            <div class="modal-body">
+                <div id="subs-list" class="subs-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?Â¤Ã¬Â Â ÃªÂ°Â?Â´Ã«ÂÂ Ã«ÂªÂ¨Ã«ÂÂ¬ -->
+    <div id="guide-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-guide">
+            <div class="modal-header">
+                <h2>Google Cloud Console ?Â¤Ã¬Â Â ÃªÂ°Â?Â´Ã«ÂÂ</h2>
+                <button id="btn-close-guide" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body guide-content">
+                <div class="guide-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Google Cloud Console ?ÂÃ¬ÂÂ</h3>
+                        <p><a href="https://console.cloud.google.com" target="_blank">https://console.cloud.google.com</a> ???ÂÃ¬ÂÂ?ÂÃ¬ÂÂ¬ Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ©?ÂÃ«ÂÂ¤.</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>???ÂÃ«Â¡Â?ÂÃ­ÂÂ¸ ?ÂÃ¬ÂÂ±</h3>
+                        <p>?ÂÃ«ÂÂ¨???ÂÃ«Â¡Â?ÂÃ­ÂÂ¸ ?Â Ã­ÂÂ ?ÂÃ«Â¡Â­?Â¤Ã¬ÂÂ´ ?Â´Ã«Â¦Â­ ??<strong>"???ÂÃ«Â¡Â?ÂÃ­ÂÂ¸"</strong> ?Â´Ã«Â¦Â­</p>
+                        <p>?ÂÃ«Â¡Â?ÂÃ­ÂÂ¸ ?Â´Ã«Â¦Â???ÂÃ«Â Â¥?ÂÃªÂ³Â  (?? "YouTube-Search") <strong>"Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸?</strong> ?Â´Ã«Â¦Â­</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>YouTube Data API v3 ?ÂÃ¬ÂÂ±??/h3>
+                        <p>?Â¼Ã¬ÂªÂ½ Ã«Â©ÂÃ«ÂÂ´ ??<strong>"API Ã«Â°??ÂÃ«Â¹Â??</strong> ??<strong>"?Â¼Ã¬ÂÂ´Ã«Â¸ÂÃ«ÂÂ¬Ã«Â¦?</strong></p>
+                        <p>"YouTube Data API v3" ÃªÂ²Â?????Â´Ã«Â¦Â­ ??<strong>"?Â¬Ã¬ÂÂ©"</strong> Ã«Â²ÂÃ­ÂÂ¼ ?Â´Ã«Â¦Â­</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>OAuth ?ÂÃ¬ÂÂ ?ÂÃ«Â©Â´ ?Â¤Ã¬Â Â</h3>
+                        <p>?Â¼Ã¬ÂªÂ½ Ã«Â©ÂÃ«ÂÂ´ ??<strong>"OAuth ?ÂÃ¬ÂÂ ?ÂÃ«Â©Â´"</strong></p>
+                        <p>User Type: <strong>"?Â¸Ã«?"</strong> ?Â Ã­ÂÂ ??"Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸?</p>
+                        <p>???Â´Ã«Â¦Â, ?Â¬Ã¬ÂÂ©??Ã¬Â§Â???Â´Ã«Â©Â?? ÃªÂ°ÂÃ«Â°Â???Â°Ã«ÂÂ½Ã¬Â²??Â´Ã«Â©Â???ÂÃ«Â Â¥ ??"?Â????ÃªÂ³ÂÃ¬ÂÂ"</p>
+                        <p>Ã«Â²ÂÃ¬ÂÂ ?ÂÃ¬ÂÂ´Ã¬Â§Â: ÃªÂ·Â¸Ã«ÂÂ¥ "?Â????ÃªÂ³ÂÃ¬ÂÂ"</p>
+                        <p>?ÂÃ¬ÂÂ¤???Â¬Ã¬ÂÂ©???ÂÃ¬ÂÂ´Ã¬Â§Â: <strong>"ADD USERS"</strong> ?Â´Ã«Â¦Â­ ??Ã«Â³Â¸Ã¬ÂÂ¸ Gmail Ã¬Â£Â¼Ã¬ÂÂ ?ÂÃ«Â Â¥ ??"?Â????ÃªÂ³ÂÃ¬ÂÂ"</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>OAuth 2.0 ?Â´Ã«ÂÂ¼?Â´Ã¬ÂÂ¸??ID ?ÂÃ¬ÂÂ±</h3>
+                        <p>?Â¼Ã¬ÂªÂ½ Ã«Â©ÂÃ«ÂÂ´ ??<strong>"?Â¬Ã¬ÂÂ©???Â¸Ã¬Â¦Â ?ÂÃ«Â³Â´"</strong></p>
+                        <p>?ÂÃ«ÂÂ¨ <strong>"+ ?Â¬Ã¬ÂÂ©???Â¸Ã¬Â¦Â ?ÂÃ«Â³Â´ Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸?</strong> ??<strong>"OAuth ?Â´Ã«ÂÂ¼?Â´Ã¬ÂÂ¸??ID"</strong></p>
+                        <p>?Â Ã­ÂÂÃ«Â¦Â¬Ã¬??Â´Ã¬ÂÂ ?Â Ã­ÂÂ: <strong>"?Â°Ã¬ÂÂ¤?Â¬Ã­ÂÂ± ??</strong> ?Â Ã­ÂÂ</p>
+                        <p>?Â´Ã«Â¦Â ?ÂÃ«Â Â¥ (?? "YouTube Search Desktop") ??<strong>"Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸?</strong></p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h3>Client ID?Â Client Secret Ã«Â³ÂµÃ¬ÂÂ¬</h3>
+                        <p>?ÂÃ¬ÂÂ±???Â´Ã«ÂÂ¼?Â´Ã¬ÂÂ¸??ID?Â ?Â´Ã«ÂÂ¼?Â´Ã¬ÂÂ¸??Ã«Â³Â´Ã¬ÂÂ Ã«Â¹ÂÃ«?Ã«Â²ÂÃ­ÂÂ¸Ã«Â¥?Ã«Â³ÂµÃ¬ÂÂ¬?Â©Ã«ÂÂ??</p>
+                        <p>??ÃªÂ°ÂÃ«ÂÂ¤???ÂÃ«Â¡ÂÃªÂ·Â¸Ã«ÂÂ¨??Ã«Â¡ÂÃªÂ·Â¸???Â¤Ã¬Â Â ?ÂÃ«Â©Â´??Ã«Â¶ÂÃ¬ÂÂ¬?Â£Ã¬ÂÂ¼?Â¸Ã¬ÂÂ.</p>
+                        <div class="guide-warning">
+                            <strong>Ã¬Â£Â¼Ã¬ÂÂ:</strong> Client Secret?Â ?ÂÃ«? ?Â¤Ã«Â¥Â¸ ?Â¬Ã«ÂÂÃªÂ³?ÃªÂ³ÂµÃ¬ÂÂ ?ÂÃ¬? Ã«Â§ÂÃ¬ÂÂ¸??
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-note">
+                    <h4>Ã¬Â°Â¸ÃªÂ³Â ?Â¬Ã­ÂÂ­</h4>
+                    <ul>
+                        <li>?ÂÃ¬ÂÂ¤??Ã«ÂªÂ¨Ã«ÂÂ?ÂÃ¬ÂÂ???ÂÃ¬ÂÂ ?ÂÃ«Â©Â´??"?ÂÃ¬ÂÂ¤???Â¬Ã¬ÂÂ©??Ã«Â¡?Ã¬Â¶ÂÃª???ÃªÂ³ÂÃ¬Â ÂÃ«Â§?Ã«Â¡ÂÃªÂ·Â¸??ÃªÂ°Â?Â¥Ã­ÂÂ©?ÂÃ«ÂÂ¤.</li>
+                        <li>7?Â¼Ã«Â§Â???Â¬Ã¬ÂÂ¸Ã¬Â¦ÂÃ¬ÂÂ´ ?ÂÃ¬ÂÂ?ÂÃ«ÂÂ Ã«Â¬Â¸Ã¬Â Â?????ÂÃ«Â¡ÂÃªÂ·Â¸Ã«ÂÂ¨?ÂÃ¬ÂÂ ?ÂÃ«ÂÂ?Â¼Ã«Â¡Â ?Â Ã­ÂÂ°??ÃªÂ°Â±Ã¬ÂÂ ?ÂÃ«?Ã«Â¡?ÃªÂ±Â±Ã¬Â Â?ÂÃ¬? ?ÂÃ¬ÂÂ???Â©Ã«ÂÂ??</li>
+                        <li>API ?Â Ã«ÂÂ¹?ÂÃ¬? ?ÂÃ«Â£Â¨ 10,000 ?Â¨Ã¬ÂÂ?ÂÃ«ÂÂ?? ?Â¼Ã«Â°Â?ÂÃ¬ÂÂ¸ ?Â¬Ã¬ÂÂ©?ÂÃ«ÂÂ Ã¬Â¶Â©Ã«Â¶Â?Â©Ã«ÂÂ??</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?Â¸Ã¬Â¦Â Ã¬Â½ÂÃ«ÂÂ ?ÂÃ«Â Â¥ Ã«ÂªÂ¨Ã«ÂÂ¬ -->
+    <div id="auth-code-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-auth">
+            <div class="modal-header">
+                <h2>Google Ã«Â¡ÂÃªÂ·Â¸??/h2>
+            </div>
+            <div class="modal-body auth-content">
+                <div class="auth-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <p>?ÂÃ«ÂÂ URL??Ã«Â¸ÂÃ«ÂÂ¼?Â°Ã¬??ÂÃ¬ÂÂ ?Â´Ã«Â Â¸?ÂµÃ«ÂÂ?? Google ÃªÂ³ÂÃ¬Â Â?Â¼Ã«Â¡Â Ã«Â¡ÂÃªÂ·Â¸?Â¸Ã­ÂÂ?Â¸Ã¬ÂÂ.</p>
+                        <div class="auth-url-container">
+                            <div id="auth-url-display" class="auth-url-text"></div>
+                            <button id="btn-copy-auth-url" class="btn btn-sm">URL Ã«Â³ÂµÃ¬ÂÂ¬</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <p>Ã«Â¡ÂÃªÂ·Â¸?????ÂÃ¬ÂÂ?ÂÃ«ÂÂ <strong>?Â¸Ã¬Â¦Â Ã¬Â½ÂÃ«ÂÂ</strong>Ã«Â¥??ÂÃ«ÂÂ??Ã«Â¶ÂÃ¬ÂÂ¬?Â£Ã¬ÂÂ¼?Â¸Ã¬ÂÂ.</p>
+                        <div class="auth-code-input-container">
+                            <input type="text" id="auth-code-input" class="auth-code-input" placeholder="?Â¸Ã¬Â¦Â Ã¬Â½ÂÃ«ÂÂÃ«Â¥??Â¬ÃªÂ¸Â°??Ã«Â¶ÂÃ¬ÂÂ¬?Â£Ã¬ÂÂ¼?Â¸Ã¬ÂÂ...">
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-buttons">
+                    <button id="btn-cancel-auth" class="btn btn-secondary">Ã¬Â·Â¨Ã¬ÂÂ</button>
+                    <button id="btn-submit-auth-code" class="btn btn-primary">Ã«Â¡ÂÃªÂ·Â¸???ÂÃ«Â£Â</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â° ?ÂµÃ¬ÂÂ Ã«ÂªÂ¨Ã«ÂÂ¬ -->
+    <div id="export-options-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>?Â´Ã«Â³Â´?Â´ÃªÂ¸Â° ?ÂµÃ¬ÂÂ</h2>
+                <button id="btn-close-export-options" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-option-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="export-include-comments">
+                        <span>?ÂÃª? ?Â¬Ã­ÂÂ¨ (?ÂÃ¬ÂÂ??Ã¬ÂµÂÃ«? 20ÃªÂ°?</span>
+                    </label>
+                    <p class="option-hint">?Â¤Ã¬ÂÂ???ÂÃª? ?Â°Ã¬ÂÂ  ?Â Ã«Â³Â ???Â¸ÃªÂ¸Â°?ÂÃ¬ÂÂ¼Ã«Â¡?Ã¬Â±ÂÃ¬?</p>
+                </div>
+                <div class="export-keywords-group" id="export-keywords-group" style="display:none;">
+                    <label>?Â°Ã¬ÂÂ  ?Â Ã«Â³Â ?Â¤Ã¬ÂÂ??(?Â¼Ã­ÂÂÃ«Â¡?ÃªÂµÂ¬Ã«Â¶Â)</label>
+                    <input type="text" id="export-comment-keywords" value="ÃªÂ³ÂµÃªÂ°Â, ?ÂÃ«Â¡Â, ?Â??ÃªÂ·Â¸Ã«ÂÂ¬?Â´Ã¬ÂÂ" placeholder="ÃªÂ³ÂµÃªÂ°Â, ?ÂÃ«Â¡Â, ?Â??ÃªÂ·Â¸Ã«ÂÂ¬?Â´Ã¬ÂÂ">
+                </div>
+                <div class="export-progress" id="export-progress" style="display:none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="export-progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="export-progress-text">?ÂÃª? ÃªÂ°Â?Â¸Ã¬ÂÂ¤??Ã¬Â¤?.. 0/0</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-cancel-export" class="btn btn-secondary">Ã¬Â·Â¨Ã¬ÂÂ</button>
+                <button id="btn-confirm-export" class="btn btn-primary">?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÃªÂ³ÂÃ¬Â ÂÃ«Â³?API ?Â¤Ã¬Â Â Ã«ÂªÂ¨Ã«ÂÂ¬ -->
+    <div id="account-api-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-auth">
+            <div class="modal-header">
+                <h2>ÃªÂ³ÂÃ¬Â ÂÃ«Â³?API ?Â¤Ã¬Â Â</h2>
+                <button id="btn-close-account-api" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">ÃªÂ°?ÃªÂ³ÂÃ¬Â Â?Â ?ÂÃ¬Â²Â´ Google Cloud ?ÂÃ«Â¡Â?ÂÃ­ÂÂ¸ APIÃªÂ°Â ?ÂÃ¬ÂÂ?Â©Ã«ÂÂ?? ?Â´Ã«ÂÂ¹ ?ÂÃ«Â¡Â?ÂÃ­ÂÂ¸???Â Ã«ÂÂ¹?ÂÃ¬ÂÂ ?Â¬Ã¬ÂÂ©?Â©Ã«ÂÂ??</p>
+
+                <div id="account-api-status" class="api-status-box"></div>
+
+                <div class="setup-form">
+                    <div class="form-actions">
+                        <button id="btn-save-account-api" class="btn btn-primary">?Â??/button>
+                        <button id="btn-delete-account-api" class="btn btn-danger" style="display:none;">API ?Â¤Ã¬Â Â ??Â Â</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== Ã«Â¡ÂÃ¬ÂÂ´?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ Ã«ÂªÂ¨Ã«ÂÂ¬ ?ÂÃ¬ÂÂ ========== -->
+
+    <!-- ?ÂÃ«Â¡Â??ÃªÂ´ÂÃ«Â¦?Ã«ÂªÂ¨Ã«ÂÂ¬ (?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤) -->
+    <div id="studio-profile-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>?Â Ã­ÂÂÃ«Â¸?ÃªÂ³ÂÃ¬Â Â ÃªÂ´ÂÃ«Â¦?/h2>
+                <button class="btn-close" onclick="studioCloseProfileManager()">&times;</button>
+            </div>
+            <div class="modal-body studio-profile-modal-body">
+                <div class="studio-profile-left">
+                    <h3>?Â±Ã«Â¡Â??ÃªÂ³ÂÃ¬Â Â</h3>
+                    <select id="studio-profile-list" size="10"></select>
+                    <div class="studio-profile-order-btns">
+                        <button onclick="studioMoveProfileUp()" class="btn btn-sm">Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioMoveProfileDown()" class="btn btn-sm">Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioAddSeparator()" class="btn btn-sm">??/button>
+                    </div>
+                </div>
+                <div class="studio-profile-right">
+                    <h3>ÃªÂ³ÂÃ¬Â Â ?ÂÃ«Â³Â´</h3>
+                    <div class="studio-profile-form">
+                        <div class="studio-profile-field">
+                            <label>ÃªÂ³ÂÃ¬Â Â ?Â´Ã«Â¦Â</label>
+                            <input type="text" id="studio-profile-name-input" placeholder="?? ???Â Ã­ÂÂÃ«Â¸?Ã¬Â±ÂÃ«ÂÂ">
+                        </div>
+                        <div class="studio-profile-field">
+                            <label>API ??/label>
+                            <div class="studio-input-with-btn">
+                                <input type="text" id="studio-profile-credential" placeholder="Google Cloud API ???ÂÃ«Â Â¥">
+                                <button onclick="studioValidateAPI()" class="btn btn-sm">ÃªÂ²ÂÃ¬Â¦?/button>
+                            </div>
+                        </div>
+                        <div class="studio-profile-field">
+                            <label>?Â???Â´Ã«ÂÂ</label>
+                            <div class="studio-input-with-btn">
+                                <input type="text" id="studio-profile-folder" placeholder="?ÂÃ¬ÂÂ ?Â???Â´Ã«ÂÂ" readonly>
+                                <button onclick="studioSelectProfileFolder()" class="btn btn-sm">Ã¬Â°Â¾Ã¬ÂÂÃ«Â³Â´ÃªÂ¸Â°</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="studio-profile-actions">
+                        <button onclick="studioExportProfiles()" class="btn btn-sm">?ÂÂ¤ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                        <button onclick="studioImportProfiles()" class="btn btn-sm">?ÂÂ¥ ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?/button>
+                        <button onclick="studioAddProfile()" class="btn btn-primary btn-sm">Ã¬Â¶ÂÃª?</button>
+                        <button onclick="studioUpdateProfile()" class="btn btn-sm">?ÂÃ¬Â Â</button>
+                        <button onclick="studioDeleteProfile()" class="btn btn-danger btn-sm">??Â Â</button>
+                        <button onclick="studioCloseProfileManager()" class="btn btn-sm">?Â«ÃªÂ¸Â°</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?ÂÃ«Â¦Â¬??ÃªÂ´ÂÃ«Â¦?Ã«ÂªÂ¨Ã«ÂÂ¬ (?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤) -->
+    <div id="studio-preset-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>?ÂÃ«Â¦Â¬??ÃªÂ´ÂÃ«Â¦?/h2>
+                <button class="btn-close" onclick="studioClosePresetManager()">&times;</button>
+            </div>
+            <div class="modal-body studio-preset-modal-body">
+                <div class="studio-preset-left">
+                    <h3>?Â?Â¥Ã«ÂÂ ?ÂÃ«Â¦Â¬??/h3>
+                    <select id="studio-preset-list" size="10" onchange="studioLoadPresetForEdit()"></select>
+                    <div class="studio-preset-order-btns">
+                        <button onclick="studioMovePresetUp()" class="btn btn-sm">Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioMovePresetDown()" class="btn btn-sm">Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioDeleteSelectedPreset()" class="btn btn-danger btn-sm">?ÂÂÃ¯Â¸?/button>
+                    </div>
+                </div>
+                <div class="studio-preset-right">
+                    <h3>?ÂÃ«Â¦Â¬???Â¸Ã¬Â§Â</h3>
+                    <div class="studio-preset-form">
+                        <div class="studio-preset-field">
+                            <label>?ÂÃ«Â¦Â¬???Â´Ã«Â¦Â:</label>
+                            <input type="text" id="studio-preset-edit-name" placeholder="?ÂÃ«Â¦Â¬?ÂÃ¬ÂÂ ?Â Ã­ÂÂ?ÂÃ¬ÂÂ¸??>
+                        </div>
+                        <div id="studio-preset-eq-info" class="studio-preset-eq-info" style="display:none;">
+                            <h4>?ÂÂ EQ ?Â¤Ã¬Â Â ?ÂÃ«Â³Â´</h4>
+                            <div id="studio-preset-eq-details"></div>
+                        </div>
+                        <div id="studio-preset-characters-container">
+                            <div class="studio-empty-notice">?ÂÃ«Â¦Â¬?ÂÃ¬ÂÂ ?Â Ã­ÂÂ?ÂÃ«Â©Â´ Ã¬ÂºÂÃ«Â¦Â­?Â°Ã«Â³Â ?ÂÃ¬ÂÂ± ?Â¤Ã¬Â Â???ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</div>
+                        </div>
+                    </div>
+                    <div class="studio-preset-actions">
+                        <button onclick="studioExportPresets()" class="btn btn-sm">?ÂÂ¤ ?Â´Ã«Â³Â´?Â´ÃªÂ¸Â°</button>
+                        <button onclick="studioImportPresets()" class="btn btn-sm">?ÂÂ¥ ÃªÂ°Â?Â¸Ã¬ÂÂ¤ÃªÂ¸?/button>
+                        <button onclick="studioSavePresetEdit()" class="btn btn-primary btn-sm">Ã«Â³ÂÃªÂ²Â½Ã¬ÂÂ¬???Â??/button>
+                        <button onclick="studioClosePresetManager()" class="btn btn-sm">?Â«ÃªÂ¸Â°</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EQ ?ÂÃ¬Â¹Â Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â° Ã«ÂªÂ¨Ã«ÂÂ¬ (?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤) -->
+    <div id="studio-eq-preview-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 90%; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>EQ ?ÂÃ¬Â¹Â Ã«Â¯Â¸Ã«Â¦Â¬Ã«Â³Â´ÃªÂ¸Â°</h2>
+                <button class="btn-close" onclick="studioCloseEQPreview()">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; justify-content: center; align-items: center; padding: 20px;">
+                <div id="studio-eq-preview-container" style="position: relative; background: #000; border: 2px solid #667eea;">
+                    <canvas id="studio-eq-preview-canvas"></canvas>
+                    <div id="studio-eq-preview-box" style="position: absolute; border: 3px dashed #667eea; background: transparent;"></div>
+                    <div id="studio-eq-preview-info" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?ÂÃ¬ÂÂ ?ÂÃ«Â£Â ?ÂÃ«Â¦Â¼ Ã«ÂªÂ¨Ã«ÂÂ¬ (?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤) -->
+    <div id="studio-complete-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>?ÂÂ ?ÂÃ¬ÂÂ ?ÂÃ«Â£Â</h2>
+                <button class="btn-close" onclick="studioCloseCompleteModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 30px; text-align: center;">
+                <p id="studio-complete-message" style="font-size: 16px; margin-bottom: 30px;">Ã«ÂªÂ¨Ã«ÂÂ  ?ÂÃ¬ÂÂ???ÂÃ«Â£Â?ÂÃ¬ÂÂ?ÂµÃ«ÂÂ??</p>
+                <div class="studio-complete-actions">
+                    <button onclick="studioOpenOutputFolder()" class="btn btn-primary">?ÂÂ ?Â´Ã«ÂÂ ?Â´ÃªÂ¸Â°</button>
+                    <button onclick="studioGoToSubtitle()" class="btn btn-success">?ÂÂ ?ÂÃ«Â§Â ?ÂÃ¬ÂÂ±</button>
+                    <button onclick="studioCloseCompleteModal()" class="btn">?ÂÃ¬ÂÂ¸</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTS API ??ÃªÂ´ÂÃ«Â¦?Ã«ÂªÂ¨Ã«ÂÂ¬ (?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤) -->
+    <div id="studio-tts-keys-modal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>?ÂÂ TTS API ??ÃªÂ´ÂÃ«Â¦?/h2>
+                <button class="btn-close" onclick="studioCloseTTSKeyManager()">&times;</button>
+            </div>
+            <div class="modal-body studio-tts-keys-modal-body">
+                <div class="studio-tts-keys-left">
+                    <h3>?Â±Ã«Â¡Â??API ??/h3>
+                    <p class="studio-tts-keys-desc">?ÂÃ¬ÂÂ?ÂÃ«Â¡??Â¬Ã¬ÂÂ©???ÂÃ¬ÂÂ¸ ???ÂÃ«ÂÂ ?ÂÃ­ÂÂ?Â©Ã«ÂÂ??</p>
+                    <select id="studio-tts-keys-list" size="8" onchange="studioLoadTTSKeyDetails()"></select>
+                    <div class="studio-tts-keys-order-btns">
+                        <button onclick="studioMoveTTSKeyUp()" class="btn btn-sm" title="?Â°Ã¬ÂÂ ?ÂÃ¬ÂÂ ?Â¬Ã«Â¦Â¬ÃªÂ¸?>Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioMoveTTSKeyDown()" class="btn btn-sm" title="?Â°Ã¬ÂÂ ?ÂÃ¬ÂÂ ?Â´Ã«Â¦Â¬ÃªÂ¸?>Ã¢Â¬ÂÃ¯Â¸Â</button>
+                        <button onclick="studioDeleteTTSKey()" class="btn btn-danger btn-sm" title="????Â Â">?ÂÂÃ¯Â¸?/button>
+                    </div>
+                </div>
+                <div class="studio-tts-keys-right">
+                    <h3>??API ??Ã¬Â¶ÂÃª?</h3>
+                    <div class="studio-tts-keys-form">
+                        <div class="studio-tts-keys-field">
+                            <label>API ??/label>
+                            <input type="text" id="studio-tts-key-input" placeholder="Google Cloud TTS API ???ÂÃ«Â Â¥">
+                        </div>
+                        <div class="studio-tts-keys-field studio-tts-key-add-row">
+                            <div class="studio-tts-key-name-wrapper">
+                                <label>???Â´Ã«Â¦Â (?Â Ã­ÂÂ)</label>
+                                <input type="text" id="studio-tts-key-name" placeholder="?? Ã«Â©ÂÃ¬ÂÂ¸ ÃªÂ³ÂÃ¬Â Â">
+                            </div>
+                            <button onclick="studioAddTTSKey()" class="btn btn-primary studio-tts-add-btn">??Ã¬Â¶ÂÃª?</button>
+                        </div>
+                    </div>
+
+                    <div id="studio-tts-usage-info" class="studio-tts-usage-info">
+                        <p class="studio-empty-notice">API ?Â¤Ã«? ?Â Ã­ÂÂ?ÂÃ«Â©Â´ ?Â¬Ã¬ÂÂ©?ÂÃ¬ÂÂ´ ?ÂÃ¬ÂÂ?Â©Ã«ÂÂ??</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                <div class="studio-tts-keys-status">
+                    <span id="studio-tts-current-month" style="color: #666;"></span>
+                    <span id="studio-tts-total-keys" style="margin-left: 15px; color: #666;"></span>
+                </div>
+                <div>
+                    <button onclick="studioRefreshTTSUsage()" class="btn btn-sm">?ÂÂ ?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨</button>
+                    <button onclick="studioCloseTTSKeyManager()" class="btn btn-primary btn-sm">?ÂÃ¬ÂÂ¸</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?ÂÃ«Â¦Â¬??ÃªÂ´ÂÃ«Â¦?Ã«ÂªÂ¨Ã«ÂÂ¬ (?ÂÃ¬ÂÂ?Â¸Ã¬ÂÂ ?? -->
+    <div id="design-preset-modal" class="modal" style="display:none;">
+        <div class="modal-content design-preset-modal-content">
+            <div class="modal-header">
+                <h2>?ÂÂ­ ?ÂÃ«Â¦Â¬??ÃªÂ´ÂÃ«Â¦?/h2>
+                <button class="btn-close" onclick="designClosePresetModal()">&times;</button>
+            </div>
+            <div class="modal-body design-preset-modal-body">
+                <div class="design-preset-left">
+                    <h3>?Â?Â¥Ã«ÂÂ ?ÂÃ«Â¦Â¬??/h3>
+                    <select id="design-preset-list" size="8" onchange="designOnPresetSelect()"></select>
+                    <div class="design-preset-btns">
+                        <button onclick="designApplySelectedPreset()" class="btn btn-primary btn-sm">?ÂÃ¬ÂÂ©</button>
+                        <button onclick="designDeleteSelectedPreset()" class="btn btn-danger btn-sm">??Â Â</button>
+                        <button onclick="designClearAllPresets()" class="btn btn-sm" title="Ã«ÂªÂ¨Ã«ÂÂ  ?ÂÃ«Â¦Â¬????Â Â">Ã¬Â´ÂÃªÂ¸Â°??/button>
+                    </div>
+                </div>
+                <div class="design-preset-right">
+                    <h3>?ÂÃ«Â¦Â¬???ÂÃ¬ÂÂ¸</h3>
+                    <div class="design-preset-detail">
+                        <div class="design-preset-field">
+                            <label>?ÂÃ«Â¦Â¬???Â´Ã«Â¦Â</label>
+                            <input type="text" id="design-preset-detail-name" placeholder="?ÂÃ«Â¦Â¬???Â´Ã«Â¦Â">
+                        </div>
+                        <div class="design-preset-field">
+                            <label>?Â?Â¥Ã«ÂÂ Ã¬ÂºÂÃ«Â¦Â­??/label>
+                            <div id="design-preset-characters" class="design-preset-characters"></div>
+                        </div>
+                        <div class="design-preset-field">
+                            <label>?ÂÃ¬ÂÂ±??/label>
+                            <input type="text" id="design-preset-detail-date" readonly>
+                        </div>
+                        <button onclick="designUpdatePresetName()" class="btn btn-sm" style="margin-top:10px;">?Â´Ã«Â¦Â Ã«Â³ÂÃªÂ²?/button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer design-preset-footer">
+                <span id="design-preset-count" style="color:#888;"></span>
+                <div>
+                    <button onclick="designRefreshPresetList()" class="btn btn-sm">?ÂÂ ?ÂÃ«Â¡ÂÃªÂ³Â Ã¬Â¹Â¨</button>
+                    <button onclick="designClosePresetModal()" class="btn btn-primary btn-sm">?ÂÃ¬ÂÂ¸</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== Ã«Â¡ÂÃ¬ÂÂ´?Â¤Ã­ÂÂ?ÂÃ¬ÂÂ¤ Ã«ÂªÂ¨Ã«ÂÂ¬ ??========== -->
+
+    <script src="/eel.js"></script>
+    <script src="script.js"></script>
+    <script src="studio.js"></script>
+    <script src="youtube.js"></script>
+    <script src="channel_manager.js"></script>
+</body>
+</html>

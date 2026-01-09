@@ -1,0 +1,261 @@
+<div class="tab-pane" id="tab-studio-batch">
+                        <div class="batch-container-3col">
+                            <!-- 1?? ?ì ëª©ë¡ (6fr) -->
+                            <div class="batch-col-main">
+                                <div class="batch-queue-section">
+                                    <div class="batch-queue-header">
+                                        <h3>? ?ì ëª©ë¡</h3>
+                                        <div class="batch-queue-actions">
+                                            <button class="btn btn-sm" onclick="batchResetAll()" title="ë°°ì¹ ???ì²´ ì´ê¸°??>? ì´ê¸°??/button>
+                                            <button class="btn btn-sm" onclick="batchAddFiles()">? ?ì¼ ì¶ê?</button>
+                                            <button class="btn btn-sm" onclick="batchAddFolder()">? ?´ë ì¶ê?</button>
+                                            <button class="btn btn-sm" onclick="batchRemoveSelected()">?ï¸?? í ?? </button>
+                                            <button class="btn btn-sm" onclick="batchClearAll()">?§¹ ?ì²´ ?? </button>
+                                        </div>
+                                    </div>
+                                    <div class="batch-queue-table-container">
+                                        <table class="batch-queue-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;"><input type="checkbox" id="batch-select-all" onchange="batchToggleAll()"></th>
+                                                    <th style="width: 80px;">?í</th>
+                                                    <th style="width: 50px;">ë²í¸</th>
+                                                    <th>?ë³??ì¼</th>
+                                                    <th style="width: 180px; text-align: center;">ë°°ê²½ ?´ë?ì§</th>
+                                                    <th style="width: 150px;">YouTube ê³ì </th>
+                                                    <th style="width: 80px;">ë¬¸ì¥ ??/th>
+                                                    <th style="width: 100px;">ì§íë¥?/th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="batch-queue-tbody">
+                                                <tr class="batch-empty-row">
+                                                    <td colspan="8">
+                                                        <div class="batch-empty-message">
+                                                            <span class="batch-empty-icon">?</span>
+                                                            <p>?ë³??ì¼??ì¶ê??´ì£¼?¸ì</p>
+                                                            <p class="batch-empty-hint">?ì¼ ì¶ê? ?ë ?´ë ì¶ê? ë²í¼???´ë¦­?ê±°?? ?ì¼???ëê·¸í???ì¼?¸ì</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2?? ê³µíµ ?¤ì  (2fr) -->
+                            <div class="batch-col-settings">
+                                <div class="batch-settings-panel">
+                                    <!-- ìºë¦­???ì± ?¹ì -->
+                                    <div class="batch-setting-group">
+                                        <div class="tts-card-header" style="margin-bottom: 12px;">
+                                            <span class="tts-card-title" id="batch-character-title">?­ ìºë¦­???ì±</span>
+                                            <div style="display: flex; gap: 6px;">
+                                                <button class="tts-btn-sm primary" onclick="designAddCharacterToPreset()" title="ìºë¦­???ì±???ë¦¬?ì ì¶ê?">??ì¶ê?</button>
+                                                <button class="tts-btn-sm danger" onclick="designDeleteSelectedCharacter()" title="? í??ìºë¦­???? ">?ï¸??? </button>
+                                            </div>
+                                        </div>
+                                        <div id="batch-voice-settings-container" class="studio-voice-settings-container design-character-container">
+                                            <div class="studio-empty-notice">?ë³¸ì ë¶ì?ë©´ ìºë¦­?°ë³ ?ì± ?¤ì ???ì?©ë??</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ë°°ê²½ ?¤ì  -->
+                                    <div class="batch-setting-group">
+                                        <h4>?¨ ë°°ê²½ ?¤ì </h4>
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-size: 1.05rem; font-weight: 600;">ê³µíµ ë°°ê²½ ?¬ì©</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-use-common-bg" onchange="batchToggleCommonBg()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="batch-setting-row" id="batch-common-bg-row">
+                                            <label>ê³µíµ ë°°ê²½:</label>
+                                            <div class="batch-file-select">
+                                                <input type="text" id="batch-bg-image" readonly placeholder="ê³µíµ ë°°ê²½ ?´ë?ì§ ? í">
+                                                <button class="btn btn-sm" onclick="batchSelectBackground()">ì°¾ê¸°</button>
+                                            </div>
+                                        </div>
+                                        <div class="batch-setting-row" id="batch-individual-bg-hint" style="display:none;">
+                                            <span class="batch-hint">ê°??ë³¸ë³ ë°°ê²½? ëª©ë¡?ì ê°ë³ ?¤ì  ê°??/span>
+                                        </div>
+                                    </div>
+
+                                    <!-- EQ ?¹ì -->
+                                    <div class="batch-setting-group batch-compact">
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <span style="font-size: 0.9rem; font-weight: 600;">?µ EQ</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-eq-enabled" onchange="batchToggleEQ()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div id="batch-eq-options" style="display: none;">
+                                            <div class="batch-setting-row">
+                                                <label>?¤í???/label>
+                                                <select id="batch-eq-style" style="flex: 1;">
+                                                    <option value="ë§ë??? selected>ë§ë???/option>
+                                                    <option value="ë¯¸ë¬ë§ë???>ë¯¸ë¬ ë§ë???/option>
+                                                    <option value="?íë§ë???>?í ë§ë???/option>
+                                                    <option value="?í">?í</option>
+                                                </select>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?ì</label>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <input type="color" id="batch-eq-color1" value="#667eea" style="width: 60px;">
+                                                    <input type="color" id="batch-eq-color2" value="#764ba2" style="width: 60px;">
+                                                </div>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?ì¹</label>
+                                                <select id="batch-eq-position" style="flex: 1;">
+                                                    <option value="bottom-center" selected>?ë¨ ì¤ì</option>
+                                                    <option value="top-center">?ë¨ ì¤ì</option>
+                                                    <option value="center">?ì¤??/option>
+                                                    <option value="bottom-left">?ë¨ ì¢ì¸¡</option>
+                                                    <option value="bottom-right">?ë¨ ?°ì¸¡</option>
+                                                    <option value="top-left">?ë¨ ì¢ì¸¡</option>
+                                                    <option value="top-right">?ë¨ ?°ì¸¡</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ë§ ?¹ì -->
+                                    <div class="batch-setting-group batch-compact">
+                                        <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <span style="font-size: 0.9rem; font-weight: 600;">?¬ ?ë§</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-subtitle-enabled" onchange="batchToggleSubtitle()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div id="batch-subtitle-options" style="display: none;">
+                                            <div class="batch-setting-row">
+                                                <label>?°í¸</label>
+                                                <select id="batch-subtitle-font" style="flex: 1;">
+                                                    <option value="Noto Sans KR" selected>Noto Sans KR</option>
+                                                    <option value="Malgun Gothic">ë§ì? ê³ ë</option>
+                                                    <option value="NanumGothic">?ëê³ ë</option>
+                                                </select>
+                                            </div>
+                                            <div class="batch-setting-row">
+                                                <label>?¬ê¸°</label>
+                                                <input type="number" id="batch-subtitle-size" value="24" min="12" max="72" style="width: 80px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3?? ?¤í & ë¡ê·¸ (2fr) -->
+                            <div class="batch-col-executor">
+                                <!-- ?ì ?¤ì  ë°??¤í -->
+                                <div class="batch-executor-panel">
+                                    <h4>? ?ì</h4>
+                                    <div class="batch-setting-row" style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="min-width: 60px;">?´ì??</label>
+                                        <select id="batch-resolution" style="flex: 1;">
+                                            <option value="1920x1080" selected>1920x1080</option>
+                                            <option value="1280x720">1280x720</option>
+                                            <option value="3840x2160">3840x2160</option>
+                                        </select>
+                                    </div>
+                                    <div class="batch-output-options" style="display: flex; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>?ì</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-video">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>MP3</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-mp3" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                            <span>?¬ëªEQ</span>
+                                            <label class="popup-toggle">
+                                                <input type="checkbox" id="batch-output-transparent-eq">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </label>
+                                    </div>
+                                    <div class="batch-setting-row" style="padding-top: 8px; border-top: 1px solid #333; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-weight: 600;">?? YouTube ?ë ?ë¡??/span>
+                                        <label class="popup-toggle">
+                                            <input type="checkbox" id="batch-youtube-auto-upload">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="batch-setting-row" id="batch-youtube-account-row" style="display:none;">
+                                        <label>?ë¡??ê³ì :</label>
+                                        <select id="batch-youtube-account" class="batch-select" onchange="batchLoadYouTubeChannels()">
+                                            <option value="">-- ê³ì  ? í --</option>
+                                        </select>
+                                    </div>
+                                    <div class="batch-setting-row" id="batch-youtube-channel-row" style="display:none;">
+                                        <label>?ë¡??ì±ë:</label>
+                                        <select id="batch-youtube-channel" class="batch-select">
+                                            <option value="">-- ì±ë ? í --</option>
+                                        </select>
+                                    </div>
+                                    <input type="hidden" id="batch-youtube-privacy" value="private">
+
+                                    <div class="batch-executor-buttons">
+                                        <button class="btn btn-lg btn-primary" id="batch-start-btn" onclick="batchStartProduction()">
+                                            ?¶ï¸ ë°°ì¹ ?ì ?ì
+                                        </button>
+                                        <button class="btn btn-lg btn-secondary" id="batch-stop-btn" onclick="batchStopProduction()" disabled>
+                                            ?¹ï¸ ì¤ì?
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ì§í ?í© -->
+                                <div class="batch-progress-panel">
+                                    <h4>? ì§í ?í©</h4>
+                                    <div class="batch-progress-stats-compact">
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?ì²´ ?ì</div>
+                                            <div style="font-size: 18px; font-weight: bold;"><span id="batch-total-count">0ê°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?ë£</div>
+                                            <div style="font-size: 18px; font-weight: bold; color: #4caf50;"><span id="batch-done-count">0ê°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">?¤í¨</div>
+                                            <div style="font-size: 18px; font-weight: bold; color: #f44336;"><span id="batch-fail-count">0ê°?/span></div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #999; font-size: 11px; margin-bottom: 4px;">ê²½ê³¼ ?ê°</div>
+                                            <div style="font-size: 18px; font-weight: bold;"><span id="batch-elapsed-time">00:00:00</span></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 12px;">
+                                        <div class="batch-progress-bar-container" style="background: #333; border-radius: 10px; overflow: hidden; height: 6px;">
+                                            <div class="batch-progress-bar" id="batch-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s;"></div>
+                                        </div>
+                                        <div class="batch-progress-text" id="batch-progress-text" style="text-align: center; margin-top: 8px; color: #999; font-size: 12px;">?ê¸?ì¤?/div>
+                                    </div>
+                                </div>
+
+                                <!-- ë¡ê·¸ -->
+                                <div class="batch-log-panel">
+                                    <h4>? ë¡ê·¸</h4>
+                                    <div class="batch-log-output" id="batch-log-output">
+                                        <div class="log-line" style="color: #888;">ë¡ê·¸ê° ?¬ê¸°???ì?©ë??..</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- YouTube ê³ì  ê´ë¦???-->
+                    

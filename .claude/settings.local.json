@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(venvScriptspyinstaller.exe build.spec --distpath \"C:\\\\Users\\\\%USERNAME%\\\\Desktop\" --clean)",
+      "Bash(venv/Scripts/python.exe -m PyInstaller:*)",
+      "Bash(venv/Scripts/pip.exe install:*)",
+      "Bash(venv/Scripts/pyinstaller.exe:*)",
+      "Bash(echo:*)",
+      "Bash(pyinstaller:*)",
+      "Bash(comm:*)",
+      "Bash(venvScriptspyinstaller.exe build.spec --clean --noconfirm)",
+      "Bash(\"./venv/Scripts/pyinstaller.exe\" build.spec --clean --noconfirm)",
+      "Bash(taskkill:*)",
+      "Bash(dir:*)",
+      "Bash(del rebuild_html.py)",
+      "Bash(git add:*)"
+    ]
+  }
+}

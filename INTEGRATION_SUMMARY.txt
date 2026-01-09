@@ -1,0 +1,233 @@
+================================================================================
+                    RoyStudio 통합 가이드 - 빠른 요약
+================================================================================
+
+📌 파일 복사 후 RoyYoutubeSearch main.py에서 수행할 작업:
+
+================================================================================
+1️⃣  main.py 상단 (줄 44 다음)에 import 추가
+================================================================================
+
+# === RoyStudio 통합을 위한 import ===
+import io
+import base64
+from pathlib import Path
+import logging
+import multiprocessing
+
+try:
+    import config as roystudio_config
+    import utils
+    import services
+    from pipeline_processor import PipelineProcessor
+    ROYSTUDIO_AVAILABLE = True
+except ImportError as e:
+    print(f"[경고] RoyStudio 모듈 일부 임포트 실패: {e}")
+    ROYSTUDIO_AVAILABLE = False
+
+try:
+    utils.ensure_pydub_ffmpeg_paths()
+except:
+    pass
+
+logging.getLogger('eel').setLevel(logging.CRITICAL)
+logging.getLogger('gevent').setLevel(logging.CRITICAL)
+logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
+
+
+================================================================================
+2️⃣  Global 변수 추가 (줄 45-50 영역)
+================================================================================
+
+# === RoyStudio 관련 전역 변수 ===
+roystudio_cancel_event = threading.Event()
+roystudio_progress = {'current': 0, 'total': 0, 'message': ''}
+whisper_model = None
+whisper_model_name = None
+whisper_cancel_event = threading.Event()
+
+
+================================================================================
+3️⃣  Helper 함수 추가 (if __name__ == '__main__': 이전)
+================================================================================
+
+# === RoyStudio Helper Functions ===
+
+def format_timestamp(seconds):
+    """초를 SRT 타임스탬프 형식으로 변환 (HH:MM:SS,mmm)"""
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int((seconds % 1) * 1000)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+
+def normalize_text_for_comparison(text):
+    """텍스트 비교를 위한 정규화 (공백, 특수문자 제거)"""
+    import re
+    text = re.sub(r'[^\w\s가-힣]', '', text)
+    text = re.sub(r'\s+', '', text)
+    return text.lower()
+
+
+================================================================================
+4️⃣  @eel.expose 함수 추가 (기타 expose 함수들이 있는 구간)
+================================================================================
+
+⚠️ 다음 함수들을 main.py의 @eel.expose 함수 섹션에 추가:
+
+1. select_mp3_for_roystudio()
+2. select_txt_for_roystudio()
+3. cancel_roystudio_generation()
+4. log_roystudio_message()
+5. update_roystudio_progress()
+6. generate_srt_with_whisper() <- 가장 중요! 약 260줄
+
+📁 자세한 코드는 ROYSTUDIO_INTEGRATION_GUIDE.md 의 "5단계" 참조
+
+
+================================================================================
+5️⃣  requirements.txt 완전히 교체
+================================================================================
+
+# YouTube Search & Authentication
+eel>=0.16.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-api-python-client>=2.100.0
+feedparser>=6.0.10
+aiohttp>=3.9.0
+cryptography>=42.0.0
+openpyxl>=3.1.0
+
+# RoyStudio 비디오 제작
+moviepy>=2.0.0
+pillow>=10.0.0
+pydub>=0.25.1
+librosa>=0.10.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Google Cloud Text-to-Speech
+google-cloud-texttospeech>=2.14.0
+
+# Audio/Visualization
+matplotlib>=3.7.0
+soundfile>=0.12.1
+
+# Text Processing
+kss>=4.0.0
+requests>=2.31.0
+python-docx>=1.0.0
+
+# Additional
+decorator>=5.1.1
+edge-tts>=6.1.0
+
+# Speech-to-Text
+openai-whisper>=20231117
+
+
+================================================================================
+6️⃣  build.spec 업데이트
+================================================================================
+
+VERSION = '2.2.0'  (버전 업그레이드)
+
+hiddenimports에 다음 추가:
+  'moviepy',
+  'imageio',
+  'imageio_ffmpeg',
+  'librosa',
+  'google.cloud.texttospeech',
+  'google.oauth2.service_account',
+  'pydub',
+  'matplotlib',
+  'numpy',
+  'scipy',
+  'edge_tts',
+  'lxml',
+  'lxml.etree',
+  'asyncio.windows_events',
+  'asyncio.windows_utils',
+
+📁 자세한 코드는 ROYSTUDIO_INTEGRATION_GUIDE.md 의 "7단계" 참조
+
+
+================================================================================
+7️⃣  web/index.html에 탭 추가
+================================================================================
+
+기존 탭들 아래에 새로운 탭 추가:
+
+<div id="studio-tab" class="tab-content">
+    <h2>📹 영상 스튜디오 (RoyStudio)</h2>
+
+    (UI 코드는 ROYSTUDIO_INTEGRATION_GUIDE.md 의 "8단계" 참조)
+
+
+================================================================================
+8️⃣  web/script.js에 JavaScript 함수 추가
+================================================================================
+
+selectMp3ForRoyStudio()
+selectTxtForRoyStudio()
+generateSrtWithWhisper()
+cancelSrtGeneration()
+logSubtitleMessage() [eel.expose]
+updateSubtitleProgress() [eel.expose]
+
+📁 자세한 코드는 ROYSTUDIO_INTEGRATION_GUIDE.md 의 "9단계" 참조
+
+
+================================================================================
+9️⃣  web/css/style.css에 스타일 추가 (선택사항)
+================================================================================
+
+RoyStudio의 스타일을 참고하여 필요한 스타일 추가
+
+
+================================================================================
+🔟 필수 설치
+================================================================================
+
+Python 패키지:
+  pip install -r requirements.txt
+
+FFmpeg 설치 (필수!):
+  Windows: https://ffmpeg.org/download.html
+  macOS: brew install ffmpeg
+  Linux: sudo apt install ffmpeg
+
+
+================================================================================
+✅ 완료 후 테스트
+================================================================================
+
+1. python main.py 로 실행
+2. YouTube 검색 기능 정상 작동 확인
+3. RoyStudio 탭 표시 확인
+4. MP3 + TXT 파일로 SRT 생성 테스트
+5. pyinstaller build.spec 로 빌드
+
+
+================================================================================
+📚 상세 가이드
+================================================================================
+
+ROYSTUDIO_INTEGRATION_GUIDE.md 파일을 참고하세요!
+- 각 단계별 상세 코드
+- 문제 해결
+- 테스트 체크리스트
+
+
+================================================================================
+⚠️ 중요 사항
+================================================================================
+
+1. Whisper 모델은 처음 실행 시 다운로드됩니다 (시간 소요)
+2. FFmpeg 설치는 필수입니다 (없으면 비디오 처리 불가)
+3. generate_srt_with_whisper() 함수는 약 260줄입니다
+4. 모든 파일 경로는 RoyStudio app_eel.py 참조
+
+================================================================================

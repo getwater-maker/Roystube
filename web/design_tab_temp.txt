@@ -1,0 +1,410 @@
+
+                    <div class="tab-pane active" id="tab-studio-tts-design">
+                        <div class="tts-design-container">
+                            <!-- 1?? ?¤ë -->
+                            <div class="tts-design-header">
+                                <div class="tts-header-left">
+                                    <h2>?ï¸?TTS ?ë ?´ì ?¤í?ì¤</h2>
+                                    <div class="tts-api-usage-inline" id="design-api-status">
+                                        ?¬ë?¨ë | Std: 400ë§?Â· 2% | Wave: 100ë§?Â· 8% | N2: 100ë§?Â· 0% | Chirp: 50ë§?Â· 0% |
+                                    </div>
+                                </div>
+                                <div class="tts-header-right">
+                                    <button class="tts-icon-btn" onclick="designReset()" title="ì´ê¸°??>?</button>
+                                    <button class="tts-icon-btn" onclick="designOpenAPIKeyModal()" title="API ??ê´ë¦?>?</button>
+                                    <button class="tts-icon-btn" onclick="designOpenSettingsModal()" title="?¤ì ">?ï¸</button>
+                                    <button class="tts-icon-btn" onclick="copyAllLogs()" title="ë¡ê·¸ ë³µì¬">?</button>
+                                </div>
+                            </div>
+
+                            <!-- 2?? ë©ì¸ ?ì´?ì 3??(2:6:2) -->
+                            <div class="tts-design-main tts-3col-layout">
+                                <!-- 1?? ë¯¸ë¦¬ë³´ê¸° + ì¶ë ¥?¤ì  -->
+                                <div class="tts-design-col tts-col-preview-output">
+                                    <!-- ?ì ë¯¸ë¦¬ë³´ê¸° -->
+                                    <div class="tts-section-card tts-unified-preview-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title">?¬ ë¯¸ë¦¬ë³´ê¸°</span>
+                                            <div class="tts-card-actions">
+                                                <button class="tts-btn-sm" onclick="designSelectBackground()" title="ë°°ê²½ ?´ë?ì§ ? í">?¼ï¸?/button>
+                                                <button class="tts-btn-sm" onclick="designLoadAndAnalyzeScript()" title="?ë³??´ê¸° ë°?ë¶ì">?</button>
+                                                <button class="tts-btn-sm primary" onclick="designPlayCurrentSentence()" title="?ì¬ ë¬¸ì¥ ë¯¸ë¦¬?£ê¸°">?</button>
+                                            </div>
+                                        </div>
+                                        <div class="tts-unified-preview">
+                                            <div class="tts-preview-screen" onclick="designOpenPreviewPopup()" title="?´ë¦­?ì¬ ?ë?">
+                                                <div class="tts-layer-bg">
+                                                    <img src="" alt="" style="display:none;">
+                                                    <div class="tts-bg-placeholder">?´ë¦­?ì¬ ?ë?</div>
+                                                </div>
+                                                <div class="tts-layer-eq">
+                                                    <div class="tts-eq-bars">
+                                                        <div class="eq-bar" style="height: 60%;"></div>
+                                                        <div class="eq-bar" style="height: 80%;"></div>
+                                                        <div class="eq-bar" style="height: 45%;"></div>
+                                                        <div class="eq-bar" style="height: 90%;"></div>
+                                                        <div class="eq-bar" style="height: 70%;"></div>
+                                                        <div class="eq-bar" style="height: 55%;"></div>
+                                                        <div class="eq-bar" style="height: 85%;"></div>
+                                                        <div class="eq-bar" style="height: 40%;"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="tts-layer-subtitle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ì ?¤ì  -->
+                                    <div class="tts-section-card tts-output-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title">? ?ì</span>
+                                        </div>
+                                        <div class="tts-output-settings">
+                                            <div class="tts-output-row" style="display: flex; align-items: center; gap: 10px;">
+                                                <label style="min-width: 60px;">?´ì??</label>
+                                                <select class="tts-resolution" id="design-resolution" style="flex: 1;" onchange="designOutputSettings.resolution = this.value">
+                                                    <option value="1920x1080">1920x1080</option>
+                                                    <option value="1280x720">1280x720</option>
+                                                    <option value="3840x2160">3840x2160</option>
+                                                </select>
+                                            </div>
+                                            <div class="tts-output-options" style="display: flex; gap: 20px; align-items: center; margin: 8px 0;">
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">?ì</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-video" onchange="designOutputSettings.video = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">MP3</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-mp3" checked onchange="designOutputSettings.mp3 = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                                                    <span style="min-width: 60px;">?¬ëªEQ</span>
+                                                    <label class="popup-toggle">
+                                                        <input type="checkbox" id="design-output-eq" onchange="designOutputSettings.transparentEQ = this.checked">
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </label>
+                                            </div>
+                                            <div class="tts-output-row" style="padding-top: 8px; border-top: 1px solid #333; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                                                <span style="font-weight: 600;">?? YouTube ?ë ?ë¡??/span>
+                                                <label class="popup-toggle">
+                                                    <input type="checkbox" id="design-youtube-auto-upload">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="tts-output-row" id="design-youtube-account-row" style="display:none;">
+                                                <label>?ë¡??ê³ì :</label>
+                                                <select id="design-youtube-account" class="tts-resolution">
+                                                    <option value="">-- ê³ì  ? í --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ?ì ë²í¼ -->
+                                    <div class="tts-action-buttons">
+                                        <button class="tts-btn-large primary" onclick="designStartProduction()">?¬ ?ì</button>
+                                    </div>
+
+                                    <!-- ì§í ?í -->
+                                    <div class="tts-progress-section" style="display: none;">
+                                        <div class="tts-progress-header">
+                                            <span>?ì ì¤ë¹?ì¤?..</span>
+                                            <span>0%</span>
+                                        </div>
+                                        <div class="tts-progress-bar">
+                                            <div class="tts-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <div class="tts-progress-time">ê²½ê³¼ ?ê°: 00:00</div>
+                                    </div>
+                                </div>
+
+                                <!-- 2?? ?ë§ ?¤ì  -->
+                                <div class="tts-design-col tts-col-sentences-only">
+                                    <div class="tts-section-card tts-sentences-card tts-sentences-full">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title" id="design-subtitle-title">? ?ë§ ?¤ì </span>
+                                            <div class="tts-card-actions">
+                                                <button class="tts-btn-sm" onclick="designToggleAllClips()">?ì²´ ? í</button>
+                                                <button class="tts-btn-sm primary" onclick="designSaveSRT()">?¾ SRT</button>
+                                            </div>
+                                        </div>
+                                        <div class="tts-sentences-list tts-sentences-scrollable">
+                                            <div class="tts-empty-message">?ë³¸ì ë¶ì?´ì£¼?¸ì.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3?? ìºë¦­???ì± ?¤ì  -->
+                                <div class="tts-design-col tts-col-character">
+                                    <div class="tts-section-card tts-settings-tabs-card">
+                                        <div class="tts-card-header">
+                                            <span class="tts-card-title" id="design-character-title">?­ ìºë¦­???ì±</span>
+                                            <div style="display: flex; gap: 6px;">
+                                                <button class="tts-btn-sm primary" onclick="designAddCharacterToPreset()" title="ìºë¦­???ì±???ë¦¬?ì ì¶ê?">??ì¶ê?</button>
+                                                <button class="tts-btn-sm danger" onclick="designDeleteSelectedCharacter()" title="? í??ìºë¦­???? ">?ï¸??? </button>
+                                            </div>
+                                        </div>
+                                        <div id="design-voice-settings-container" class="studio-voice-settings-container design-character-container">
+                                            <div class="studio-empty-notice">?ë³¸ì ë¶ì?ë©´ ìºë¦­?°ë³ ?ì± ?¤ì ???ì?©ë??</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="tab-description" style="color: #4ade80;">???µí© ?¤í?ì¤ - TTS ?ì± ?ì± + ?ë§ + EQ ?ê°??/p>
+
+                        <!-- ë¯¸ë¦¬ë³´ê¸° ?ë? ?ì -->
+                        <div id="design-preview-popup" class="design-preview-popup" style="display:none;">
+                            <div class="design-popup-overlay" onclick="designClosePreviewPopup()"></div>
+                            <div class="design-popup-content design-popup-vertical">
+                                <div class="design-popup-header">
+                                    <span>?¬ ë¯¸ë¦¬ë³´ê¸° ?¸ì§</span>
+                                    <div class="design-popup-actions">
+                                        <button class="tts-btn-sm" onclick="designSelectBackground()">?¼ï¸?ë°°ê²½</button>
+                                        <button class="tts-btn-sm" onclick="designClosePreviewPopup()">???«ê¸°</button>
+                                    </div>
+                                </div>
+                                <div class="design-popup-body design-popup-body-vertical">
+                                    <!-- ?ë¨: ë¯¸ë¦¬ë³´ê¸° ?ë©´ -->
+                                    <div class="design-popup-screen-wrapper">
+                                        <div class="design-popup-screen" id="popup-preview-screen">
+                                            <div class="tts-layer-bg">
+                                                <img src="" alt="" style="display:none;">
+                                            </div>
+                                            <div class="tts-layer-eq popup-eq">
+                                                <div class="tts-eq-bars">
+                                                    <div class="eq-bar" style="height: 60%;"></div>
+                                                    <div class="eq-bar" style="height: 80%;"></div>
+                                                    <div class="eq-bar" style="height: 45%;"></div>
+                                                    <div class="eq-bar" style="height: 90%;"></div>
+                                                    <div class="eq-bar" style="height: 70%;"></div>
+                                                    <div class="eq-bar" style="height: 55%;"></div>
+                                                    <div class="eq-bar" style="height: 85%;"></div>
+                                                    <div class="eq-bar" style="height: 40%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="tts-layer-subtitle popup-subtitle">?ë§ ?ì¤??/div>
+                                        </div>
+                                    </div>
+                                    <!-- ?ë¨: ?¤ì  ?¨ë (?ë§/EQ ê°ë¡?ë°°ì¹) -->
+                                    <div class="design-popup-controls-horizontal">
+                                        <!-- ?ë§ ?¤ì  -->
+                                        <div class="popup-settings-section">
+                                            <div class="popup-section-header">
+                                                <span class="popup-section-title">?¬ ?ë§</span>
+                                                <label class="popup-toggle"><input type="checkbox" id="popup-sub-visible" checked onchange="designToggleSubtitleVisible(this.checked)"><span class="toggle-slider"></span></label>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?°í¸</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-sub-font" class="popup-select-sm" onchange="designSetSubtitleFont(this.value)">
+                                                        <option value="Noto Sans KR">Noto Sans KR</option>
+                                                        <option value="Nanum Gothic">?ëê³ ë</option>
+                                                        <option value="Malgun Gothic">ë§ì?ê³ ë</option>
+                                                        <option value="Black Han Sans">ê²?ê³ ë</option>
+                                                        <option value="Jua">ì£¼ì</option>
+                                                        <option value="Do Hyeon">?í</option>
+                                                        <option value="Gothic A1">ê³ ë A1</option>
+                                                    </select>
+                                                    <input type="number" id="popup-sub-size" class="popup-input-sm" value="24" min="12" max="72" step="2" onchange="designSetSubtitleSize(this.value)" title="?¬ê¸°">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">ê¸?ì</span>
+                                                <div class="popup-row-content">
+                                                    <input type="color" id="popup-sub-color" class="popup-color-sm" value="#ffffff" onchange="designSetSubtitleColor(this.value)" title="ê¸?ì">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?ì¹</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-sub-position-preset" class="popup-select-sm" onchange="designSetSubPositionPreset(this.value)">
+                                                        <option value="custom">?¬ì©??ì§??/option>
+                                                        <option value="center">ì¤ì</option>
+                                                        <option value="top-center">?ë¨ ì¤ì</option>
+                                                        <option value="bottom-center" selected>?ë¨ ì¤ì</option>
+                                                        <option value="top-left">?ë¨ ì¢ì¸¡</option>
+                                                        <option value="top-right">?ë¨ ?°ì¸¡</option>
+                                                        <option value="bottom-left">?ë¨ ì¢ì¸¡</option>
+                                                        <option value="bottom-right">?ë¨ ?°ì¸¡</option>
+                                                    </select>
+                                                    <input type="number" id="popup-sub-x" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupSubtitle(); designSetSubPositionCustom()" title="X">
+                                                    <input type="number" id="popup-sub-y" class="popup-input-sm" value="90" min="0" max="100" onchange="designUpdatePopupSubtitle(); designSetSubPositionCustom()" title="Y">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?¬ëª??/span>
+                                                <div class="popup-row-content" id="popup-sub-bg-opacity-row">
+                                                    <input type="color" id="popup-sub-bg" class="popup-color-sm" value="#000000" onchange="designSetSubtitleBg(this.value)" title="ë°°ê²½??>
+                                                    <input type="number" id="popup-sub-bg-opacity" class="popup-input-sm" value="70" min="0" max="100" step="5" onchange="designSetSubtitleBgOpacity(this.value)" title="?¬ëª??>
+                                                    <label class="popup-checkbox-sm"><input type="checkbox" id="popup-sub-bg-none" onchange="designToggleSubtitleBgNone(this.checked)">?ì</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- EQ ?¤ì  -->
+                                        <div class="popup-settings-section">
+                                            <div class="popup-section-header">
+                                                <span class="popup-section-title">?µ EQ</span>
+                                                <label class="popup-toggle"><input type="checkbox" id="popup-eq-visible" onchange="designToggleEQVisible(this.checked)"><span class="toggle-slider"></span></label>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?¤í???/span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-eq-style" class="popup-select-sm" onchange="designSetEQStyle(this.value)">
+                                                        <option value="ë§ë???>ë§ë???/option>
+                                                        <option value="ë¯¸ë¬ë§ë???>ë¯¸ë¬ë§ë???/option>
+                                                        <option value="?í">?í (??</option>
+                                                        <option value="?í">?í</option>
+                                                    </select>
+                                                </div>
+                                                <span class="popup-row-label">?ì</span>
+                                                <div class="popup-row-content">
+                                                    <input type="color" id="popup-eq-color1" class="popup-color-sm" value="#667eea" onchange="designSetEQColor(this.value, document.getElementById('popup-eq-color2').value)" title="?ì1">
+                                                    <input type="color" id="popup-eq-color2" class="popup-color-sm" value="#764ba2" onchange="designSetEQColor(document.getElementById('popup-eq-color1').value, this.value)" title="?ì2">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">?ì¹</span>
+                                                <div class="popup-row-content">
+                                                    <select id="popup-eq-position-preset" class="popup-select-sm" onchange="designSetEQPositionPreset(this.value)">
+                                                        <option value="custom">?¬ì©??ì§??/option>
+                                                        <option value="center" selected>ì¤ì</option>
+                                                        <option value="top-center">?ë¨ ì¤ì</option>
+                                                        <option value="bottom-center">?ë¨ ì¤ì</option>
+                                                        <option value="top-left">?ë¨ ì¢ì¸¡</option>
+                                                        <option value="top-right">?ë¨ ?°ì¸¡</option>
+                                                        <option value="bottom-left">?ë¨ ì¢ì¸¡</option>
+                                                        <option value="bottom-right">?ë¨ ?°ì¸¡</option>
+                                                    </select>
+                                                    <input type="number" id="popup-eq-x" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupEQ(); designSetEQPositionCustom()" title="X">
+                                                    <input type="number" id="popup-eq-y" class="popup-input-sm" value="50" min="0" max="100" onchange="designUpdatePopupEQ(); designSetEQPositionCustom()" title="Y">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">ë°?ê°?</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bars" class="popup-input-sm" value="32" min="4" max="128" step="1" onchange="designClampAndSetBarCount(this)" title="ë°?ê°?">
+                                                </div>
+                                                <span class="popup-row-label">?ì´</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-h" class="popup-input-sm" value="10" min="3" max="200" onchange="designSetEQHeight(this.value)" title="?ì´">
+                                                </div>
+                                            </div>
+                                            <div class="popup-settings-row">
+                                                <span class="popup-row-label">ë°?ê°ë¡?/span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bar-width" class="popup-input-sm" value="20" min="1" max="50" onchange="designSetEQBarWidth(this.value)" title="ë°?ê°ë¡?>
+                                                </div>
+                                                <span class="popup-row-label">ë°?ê°ê²©</span>
+                                                <div class="popup-row-content">
+                                                    <input type="number" id="popup-eq-bar-gap" class="popup-input-sm" value="3" min="0" max="20" onchange="designSetEQBarGap(this.value)" title="ë°?ê°ê²©">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- ?ì ?ë¦¬??ê´ë¦??ì -->
+                        <div id="design-preset-popup" class="design-preset-popup" style="display:none;">
+                            <div class="design-popup-overlay" onclick="designClosePresetPopup()"></div>
+                            <div class="design-preset-popup-content">
+                                <div class="design-preset-popup-header">
+                                    <h3 id="design-preset-popup-title">?¬ ???ì ?ë¦¬??ë§ë¤ê¸?/h3>
+                                    <button class="popup-close-btn" onclick="designClosePresetPopup()">??/button>
+                                </div>
+                                <div class="design-preset-popup-body">
+                                    <!-- ê¸°ë³¸ ?ë³´ -->
+                                    <div class="preset-section">
+                                        <h4>? ê¸°ë³¸ ?ë³´</h4>
+                                        <div class="preset-form-row">
+                                            <label>?ë¦¬???´ë¦:</label>
+                                            <input type="text" id="preset-name" placeholder="?? ?´ì¤ ?ì, ? íë¸??¼ì¸  ??>
+                                        </div>
+                                        <div class="preset-form-row">
+                                            <label>?¤ëª (? í):</label>
+                                            <input type="text" id="preset-description" placeholder="?ë¦¬?ì ???ê°ë¨???¤ëª">
+                                        </div>
+                                    </div>
+
+                                    <!-- API ?¤ì  -->
+                                    <div class="preset-section">
+                                        <h4>? API ?¤ì </h4>
+                                        <div class="preset-form-row">
+                                            <label>TTS API ??</label>
+                                            <select id="preset-api-key" onchange="presetShowAPIUsage()">
+                                                <option value="">-- API ??? í --</option>
+                                            </select>
+                                        </div>
+                                        <div id="preset-api-usage" class="preset-api-usage" style="display:none;"></div>
+                                    </div>
+
+                                    <!-- ìºë¦­???ì± ?¤ì  -->
+                                    <div class="preset-section">
+                                        <h4>?¤ ìºë¦­???ì± ?¤ì </h4>
+                                        <div class="preset-voices-container" id="preset-voices-container">
+                                            <div class="preset-voice-item">
+                                                <div class="preset-voice-header">
+                                                    <input type="text" class="preset-char-name" value="?ë ?´í°" placeholder="ìºë¦­?°ëª">
+                                                    <button class="preset-voice-remove" onclick="designRemovePresetVoice(this)" title="?? ">??/button>
+                                                </div>
+                                                <div class="preset-voice-settings">
+                                                    <select class="preset-voice-select">
+                                                        <option value="ko-KR-Wavenet-A">ko-KR-Wavenet-A (?¬ì±)</option>
+                                                        <option value="ko-KR-Wavenet-B">ko-KR-Wavenet-B (?¬ì±)</option>
+                                                        <option value="ko-KR-Wavenet-C">ko-KR-Wavenet-C (?¨ì±)</option>
+                                                        <option value="ko-KR-Wavenet-D">ko-KR-Wavenet-D (?¨ì±)</option>
+                                                        <option value="ko-KR-Neural2-A">ko-KR-Neural2-A (?¬ì±)</option>
+                                                        <option value="ko-KR-Neural2-B">ko-KR-Neural2-B (?¬ì±)</option>
+                                                        <option value="ko-KR-Neural2-C">ko-KR-Neural2-C (?¨ì±)</option>
+                                                        <option value="ko-KR-Standard-A">ko-KR-Standard-A (?¬ì±)</option>
+                                                        <option value="ko-KR-Standard-B">ko-KR-Standard-B (?¬ì±)</option>
+                                                        <option value="ko-KR-Standard-C">ko-KR-Standard-C (?¨ì±)</option>
+                                                        <option value="ko-KR-Standard-D">ko-KR-Standard-D (?¨ì±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-A">ko-KR-Chirp3-HD-A (?¬ì±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-B">ko-KR-Chirp3-HD-B (?¬ì±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-C">ko-KR-Chirp3-HD-C (?¨ì±)</option>
+                                                        <option value="ko-KR-Chirp3-HD-D">ko-KR-Chirp3-HD-D (?¨ì±)</option>
+                                                    </select>
+                                                    <div class="preset-voice-params">
+                                                        <label>?ë:</label>
+                                                        <div class="param-control">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetRate(this, -0.1)">??/button>
+                                                            <input type="number" class="preset-voice-rate" value="1.0" min="0.5" max="2.0" step="0.1">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetRate(this, 0.1)">+</button>
+                                                        </div>
+                                                        <label>?¼ì¹:</label>
+                                                        <div class="param-control">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetPitch(this, -1)">??/button>
+                                                            <input type="number" class="preset-voice-pitch" value="0" min="-20" max="20" step="1">
+                                                            <button type="button" class="param-btn" onclick="designAdjustPresetPitch(this, 1)">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="preset-add-voice-btn" onclick="designAddPresetVoice()">??ìºë¦­??ì¶ê?</button>
+                                    </div>
+
+                                </div>
+                                <div class="design-preset-popup-footer">
+                                    <button class="btn btn-secondary" onclick="designClosePresetPopup()">ì·¨ì</button>
+                                    <button class="btn btn-primary" onclick="designSavePresetFromPopup()">?¾ ???/button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ë°°ì¹ ?ì ??-->
+                    <div class="tab-pane" 

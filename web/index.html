@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로이의 유튜브</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="studio.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 상단 헤더 -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>🎬 로이의 유튜브</h1>
+                <span class="version">v2.0</span>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-sm" onclick="showSettings()">⚙️ 설정</button>
+                <button class="btn btn-sm" onclick="showAbout()">ℹ️ 정보</button>
+            </div>
+        </header>
+
+        <!-- 탭 네비게이션 -->
+        <nav class="tab-nav">
+            <div class="tab-nav-inner">
+                <!-- 메인 탭들 -->
+                <button class="tab-btn" data-tab="all-channel-monitor">모든채널모니터</button>
+                <button class="tab-btn" data-tab="channel-monitor">채널모니터</button>
+                <button class="tab-btn" data-tab="keyword-search">키워드검색</button>
+                <button class="tab-btn" data-tab="hot-trend">핫트렌드</button>
+                <button class="tab-btn" data-tab="mutation">돌연변이</button>
+                <!-- 로이스튜디오 탭 -->
+                <button class="tab-btn" data-tab="studio-blackscreen">검은화면</button>
+                <button class="tab-btn active" data-tab="studio-tts-design">영상</button>
+                <button class="tab-btn" data-tab="studio-batch">배치</button>
+                <button class="tab-btn" data-tab="studio-youtube">유튜브</button>
+                <button class="tab-btn" data-tab="studio-channel-manager">관리</button>
+            </div>
+        </nav>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <main class="app-main">
+
+            <!-- 모든채널모니터 탭 -->
+            <div class="tab-pane" id="tab-all-channel-monitor">
+                <div class="section-header">
+                    <h2>📺 모든채널모니터</h2>
+                    <p class="section-description">등록된 모든 채널의 최신 영상을 모니터링합니다.</p>
+                </div>
+
+                <div class="monitor-controls">
+                    <div class="control-group">
+                        <label>업데이트 간격 (분)</label>
+                        <input type="number" id="all-monitor-interval" value="30" min="5" max="1440">
+                    </div>
+                    <button onclick="startAllChannelMonitor()" class="btn btn-primary">🔄 모니터링 시작</button>
+                    <button onclick="stopAllChannelMonitor()" class="btn btn-secondary">⏹️ 중지</button>
+                    <button onclick="refreshAllChannels()" class="btn">새로고침</button>
+                </div>
+
+                <div class="video-grid" id="all-channel-video-grid">
+                    <!-- 영상 카드들이 여기에 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- 채널모니터 탭 -->
+            <div class="tab-pane" id="tab-channel-monitor">
+                <div class="section-header">
+                    <h2>📺 채널모니터</h2>
+                    <p class="section-description">특정 채널의 영상을 모니터링합니다.</p>
+                </div>
+
+                <div class="monitor-controls">
+                    <div class="control-group">
+                        <label>채널 선택</label>
+                        <select id="channel-select" onchange="onChannelChange()">
+                            <option value="">채널을 선택하세요</option>
+                            <!-- 채널 목록이 동적으로 로드됨 -->
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>업데이트 간격 (분)</label>
+                        <input type="number" id="channel-monitor-interval" value="30" min="5" max="1440">
+                    </div>
+                    <button onclick="startChannelMonitor()" class="btn btn-primary">🔄 모니터링 시작</button>
+                    <button onclick="stopChannelMonitor()" class="btn btn-secondary">⏹️ 중지</button>
+                    <button onclick="refreshChannel()" class="btn">새로고침</button>
+                </div>
+
+                <div class="video-grid" id="channel-video-grid">
+                    <!-- 영상 카드들이 여기에 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- 키워드검색 탭 -->
+            <div class="tab-pane" id="tab-keyword-search">
+                <div class="section-header">
+                    <h2>🔍 키워드검색</h2>
+                    <p class="section-description">키워드로 유튜브 영상을 검색합니다.</p>
+                </div>
+
+                <div class="search-controls">
+                    <div class="control-group">
+                        <label>검색 키워드</label>
+                        <input type="text" id="search-keyword" placeholder="검색할 키워드를 입력하세요">
+                    </div>
+                    <div class="control-group">
+                        <label>최대 결과 수</label>
+                        <input type="number" id="search-max-results" value="50" min="1" max="200">
+                    </div>
+                    <div class="control-group">
+                        <label>정렬 기준</label>
+                        <select id="search-order">
+                            <option value="relevance">관련성</option>
+                            <option value="date">업로드 날짜</option>
+                            <option value="viewCount">조회수</option>
+                            <option value="rating">평점</option>
+                        </select>
+                    </div>
+                    <button onclick="searchVideos()" class="btn btn-primary">🔍 검색</button>
+                </div>
+
+                <div class="video-grid" id="search-video-grid">
+                    <!-- 검색 결과가 여기에 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- 핫트렌드 탭 -->
+            <div class="tab-pane" id="tab-hot-trend">
+                <div class="section-header">
+                    <h2>🔥 핫트렌드</h2>
+                    <p class="section-description">유튜브 인기 트렌드를 확인합니다.</p>
+                </div>
+
+                <div class="trend-controls">
+                    <div class="control-group">
+                        <label>카테고리</label>
+                        <select id="trend-category">
+                            <option value="">전체</option>
+                            <option value="10">음악</option>
+                            <option value="20">게임</option>
+                            <option value="22">브이로그</option>
+                            <option value="24">엔터테인먼트</option>
+                            <option value="25">뉴스/정치</option>
+                            <option value="26">하우투/스타일</option>
+                            <option value="28">과학/기술</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>최대 결과 수</label>
+                        <input type="number" id="trend-max-results" value="50" min="1" max="200">
+                    </div>
+                    <button onclick="getTrendingVideos()" class="btn btn-primary">🔥 트렌드 가져오기</button>
+                </div>
+
+                <div class="video-grid" id="trend-video-grid">
+                    <!-- 트렌드 영상이 여기에 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- 돌연변이 탭 -->
+            <div class="tab-pane" id="tab-mutation">
+                <div class="section-header">
+                    <h2>🚀 돌연변이</h2>
+                    <p class="section-description">급상승한 영상을 분석합니다.</p>
+                </div>
+
+                <div class="mutation-controls">
+                    <div class="control-group">
+                        <label>분석 기간</label>
+                        <select id="mutation-period">
+                            <option value="24">24시간</option>
+                            <option value="48">48시간</option>
+                            <option value="72">72시간</option>
+                            <option value="168">1주일</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>최소 증가율 (%)</label>
+                        <input type="number" id="mutation-min-growth" value="100" min="10" max="10000">
+                    </div>
+                    <button onclick="analyzeMutations()" class="btn btn-primary">🚀 분석 시작</button>
+                </div>
+
+                <div class="video-grid" id="mutation-video-grid">
+                    <!-- 돌연변이 영상이 여기에 동적으로 추가됨 -->
+                </div>
+            </div>
+
+            <!-- ========== 로이스튜디오 탭 시작 ========== -->
+
+            <!-- 검은 화면 제작 탭 -->
+            <div class="tab-pane" id="tab-studio-blackscreen">
+                <div class="blackscreen-container">
+                    <div class="blackscreen-header">
+                        <h2>🎬 검은 화면 비디오 생성</h2>
+                        <p>타이머가 포함된 배경 영상을 생성합니다</p>
+                    </div>
+                    <div class="blackscreen-content">
+                        <div class="blackscreen-preview-section">
+                            <h3>미리보기</h3>
+                            <div id="blackscreen-preview-box" class="blackscreen-preview-box">
+                                <canvas id="blackscreen-preview-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="blackscreen-settings-section">
+                            <h3>설정</h3>
+                            <div class="setting-group">
+                                <label class="setting-label">영상 길이</label>
+                                <div class="time-input-group">
+                                    <input type="number" id="blackscreen-hours" min="0" max="23" value="0">
+                                    <span>시간</span>
+                                    <input type="number" id="blackscreen-minutes" min="0" max="59" value="5">
+                                    <span>분</span>
+                                    <input type="number" id="blackscreen-seconds" min="0" max="59" value="0">
+                                    <span>초</span>
+                                </div>
+                            </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="blackscreen-timer-toggle" checked>
+                                    타이머 표시
+                                </label>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">저장 위치</label>
+                                <div class="path-input-group">
+                                    <input type="text" id="blackscreen-output-path" readonly placeholder="저장 폴더 선택">
+                                    <button onclick="studioSelectBlackscreenOutput()" class="btn btn-sm">📂</button>
+                                </div>
+                            </div>
+                            <div class="setting-group">
+                                <button onclick="studioGenerateBlackscreen()" class="btn btn-primary btn-large">
+                                    🎬 영상 생성
+                                </button>
+                            </div>
+                            <div id="blackscreen-progress-container" style="display: none;">
+                                <div class="progress-info">
+                                    <span id="blackscreen-progress-label">준비 중...</span>
+                                    <span id="blackscreen-progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div id="blackscreen-progress-bar" class="progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 영상 탭 (TTS 디자인) -->
+            <div class="tab-pane active" id="tab-studio-tts-design">
+                <div class="design-container">
+                    <!-- 왼쪽 열: 미리보기 및 출력 설정 -->
+                    <div class="design-left-col">
+                        <!-- 미리보기 -->
+                        <div class="design-section">
+                            <div class="section-header-simple">
+                                <h3>🎬 미리보기</h3>
+                            </div>
+                            <div class="preview-box">
+                                <canvas id="design-preview-canvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 출력 설정 -->
+                        <div class="design-section">
+                            <div class="section-header-simple">
+                                <h3>📁 출력</h3>
+                            </div>
+                            <div class="output-settings">
+                                <div class="form-row">
+                                    <label>대본 폴더</label>
+                                    <div class="input-with-btn">
+                                        <input type="text" id="design-script-folder" readonly placeholder="대본 폴더">
+                                        <button onclick="designSelectScriptFolder()" class="btn-icon">📂</button>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <label>해상도</label>
+                                    <select id="design-resolution">
+                                        <option value="1920x1080">1920x1080</option>
+                                        <option value="1280x720">1280x720</option>
+                                        <option value="2560x1440">2560x1440</option>
+                                        <option value="3840x2160">3840x2160</option>
+                                    </select>
+                                </div>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="design-output-video" checked> 영상</label>
+                                    <label><input type="checkbox" id="design-output-mp3"> MP3</label>
+                                    <label><input type="checkbox" id="design-output-srt"> 자막</label>
+                                    <label><input type="checkbox" id="design-transparent-eq"> 투명EQ</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 프리셋 -->
+                        <div class="design-section">
+                            <div class="section-header-simple">
+                                <h3>💾 프리셋</h3>
+                            </div>
+                            <div class="preset-controls">
+                                <select id="design-preset-list">
+                                    <option value="">프리셋 선택</option>
+                                </select>
+                                <div class="preset-btn-group">
+                                    <button onclick="designSavePreset()" class="btn-sm">💾 저장</button>
+                                    <button onclick="designDeletePreset()" class="btn-sm">🗑️ 삭제</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 하단 버튼 -->
+                        <div class="design-section">
+                            <button onclick="designPreviewPlay()" class="btn-large btn-secondary">
+                                🎵 미리듣기
+                            </button>
+                            <button onclick="designGenerate()" class="btn-large btn-primary">
+                                ▶ 제작
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 가운데 열: 문장/자막 목록 -->
+                    <div class="design-center-col">
+                        <div class="design-section full-height">
+                            <div class="section-header-with-actions">
+                                <h3>📋 문장/자막 목록</h3>
+                                <div class="action-buttons">
+                                    <button onclick="designImportSRT()" class="btn-sm">📄 SRT</button>
+                                    <div class="action-buttons">
+                                        <button onclick="designLoadScript()" class="btn-icon">📂</button>
+                                        <button onclick="designSaveScript()" class="btn-icon">💾</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sentence-list-container" id="design-sentence-list">
+                                <!-- 문장 아이템들이 동적으로 추가됨 -->
+                                <!-- 예시 구조:
+                                <div class="sentence-item">
+                                    <input type="checkbox" checked>
+                                    <div class="sentence-color" style="background: #6495ED"></div>
+                                    <div class="sentence-time">00:00:00 → 00:00:06</div>
+                                    <div class="sentence-text">인지 감군 위관에게 명령하여 동해를 잡게 할 수 있습니다.</div>
+                                    <button class="btn-icon-sm">✏️</button>
+                                    <button class="btn-icon-sm">▶</button>
+                                </div>
+                                -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽 열: 캐릭터 음성 설정 -->
+                    <div class="design-right-col">
+                        <div class="design-section full-height">
+                            <div class="section-header-with-actions">
+                                <h3>🎤 캐릭터 음성</h3>
+                                <div class="action-buttons">
+                                    <button onclick="designAddCharacter()" class="btn-icon">➕</button>
+                                </div>
+                            </div>
+                            <div class="character-list-container" id="design-character-list">
+                                <!-- 캐릭터 아이템들이 동적으로 추가됨 -->
+                                <!-- 예시 구조:
+                                <div class="character-item">
+                                    <div class="character-header">
+                                        <div class="character-name">
+                                            <div class="character-color" style="background: #6495ED"></div>
+                                            <input type="text" value="강유" class="character-name-input">
+                                        </div>
+                                        <button class="btn-icon-sm">🔍 미리듣기</button>
+                                    </div>
+                                    <div class="character-settings">
+                                        <div class="form-row">
+                                            <select class="voice-model-select">
+                                                <option>Wavenet</option>
+                                                <option>Standard</option>
+                                            </select>
+                                            <select class="voice-select">
+                                                <option>A_여성</option>
+                                                <option>B_남성</option>
+                                            </select>
+                                        </div>
+                                        <div class="slider-row">
+                                            <label>속도</label>
+                                            <input type="range" min="0.25" max="4.0" step="0.05" value="1.0">
+                                            <button class="btn-icon-sm">-</button>
+                                            <button class="btn-icon-sm">+</button>
+                                        </div>
+                                        <div class="slider-row">
+                                            <label>피치</label>
+                                            <input type="range" min="-20" max="20" step="0.1" value="0">
+                                            <button class="btn-icon-sm">-</button>
+                                            <button class="btn-icon-sm">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 배치 탭 -->
+            <div class="tab-pane" id="tab-studio-batch">
+                <div class="batch-container-3col">
+                    <!-- 왼쪽 열: 작업 큐 -->
+                    <div class="batch-col-left">
+                        <div class="design-section" style="height: 100%;">
+                            <div class="section-header">
+                                <h3>📋 작업 큐</h3>
+                                <div class="section-actions">
+                                    <button onclick="batchAddJob()" class="btn btn-sm">➕ 추가</button>
+                                    <button onclick="batchClearCompleted()" class="btn btn-sm">🗑️ 완료 삭제</button>
+                                </div>
+                            </div>
+                            <div class="batch-queue-container">
+                                <table class="batch-queue-table">
+                                    <thead>
+                                        <tr>
+                                            <th>상태</th>
+                                            <th>스크립트</th>
+                                            <th>프리셋</th>
+                                            <th>작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="batch-queue-list">
+                                        <!-- 작업 목록이 동적으로 추가됨 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 가운데 열: 제작 설정 -->
+                    <div class="batch-col-center">
+                        <div class="design-section full-height">
+                            <div class="section-header-simple">
+                                <h3>📁 제작</h3>
+                            </div>
+
+                            <!-- 해상도 -->
+                            <div class="batch-setting-row">
+                                <label>해상도:</label>
+                                <select id="batch-resolution">
+                                    <option value="1920x1080">1920x1080</option>
+                                    <option value="1280x720">1280x720</option>
+                                    <option value="2560x1440">2560x1440</option>
+                                    <option value="3840x2160">3840x2160</option>
+                                </select>
+                            </div>
+
+                            <!-- 체크박스 그룹 -->
+                            <div class="batch-checkbox-group">
+                                <label class="batch-toggle">
+                                    <input type="checkbox" id="batch-output-video" checked>
+                                    <span class="batch-toggle-label">영상</span>
+                                </label>
+                                <label class="batch-toggle">
+                                    <input type="checkbox" id="batch-output-mp3">
+                                    <span class="batch-toggle-label">MP3</span>
+                                </label>
+                                <label class="batch-toggle">
+                                    <input type="checkbox" id="batch-transparent-eq">
+                                    <span class="batch-toggle-label">투명EQ</span>
+                                </label>
+                            </div>
+
+                            <!-- YouTube 자동 업로드 -->
+                            <div class="batch-youtube-section">
+                                <label class="batch-toggle batch-toggle-large">
+                                    <input type="checkbox" id="batch-youtube-upload">
+                                    <span class="batch-toggle-label">🚀 YouTube 자동 업로드</span>
+                                </label>
+                            </div>
+
+                            <!-- 버튼 그룹 -->
+                            <div class="batch-action-buttons">
+                                <button onclick="batchStart()" class="btn-large btn-primary">
+                                    ▶ 배치 제작 시작
+                                </button>
+                                <button onclick="batchStop()" class="btn batch-btn-stop">
+                                    ⏹️ 중지
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽 열: 진행 상황 및 로그 -->
+                    <div class="batch-col-right">
+                        <!-- 진행 상황 -->
+                        <div class="design-section">
+                            <div class="section-header-simple">
+                                <h3>📊 진행 상황</h3>
+                            </div>
+
+                            <div class="batch-stats-grid">
+                                <div class="batch-stat-item">
+                                    <span class="batch-stat-label">전체 작업</span>
+                                    <span class="batch-stat-value" id="batch-stat-total">0개</span>
+                                </div>
+                                <div class="batch-stat-item">
+                                    <span class="batch-stat-label">완료</span>
+                                    <span class="batch-stat-value batch-stat-success" id="batch-stat-completed">0개</span>
+                                </div>
+                                <div class="batch-stat-item">
+                                    <span class="batch-stat-label">실패</span>
+                                    <span class="batch-stat-value batch-stat-error" id="batch-stat-failed">0개</span>
+                                </div>
+                                <div class="batch-stat-item">
+                                    <span class="batch-stat-label">경과 시간</span>
+                                    <span class="batch-stat-value" id="batch-elapsed-time">00:00:00</span>
+                                </div>
+                            </div>
+
+                            <div class="batch-progress-text">
+                                <span id="batch-progress-label">대기 중</span>
+                            </div>
+                        </div>
+
+                        <!-- 로그 -->
+                        <div class="design-section" style="flex: 1; min-height: 300px;">
+                            <div class="section-header-simple">
+                                <h3>📝 로그</h3>
+                            </div>
+                            <div id="batch-log" class="batch-log-panel">
+                                로그가 여기에 표시됩니다...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 작업 추가 팝업 -->
+                <div id="batch-add-job-popup" class="popup-overlay" style="display: none;" onclick="batchCloseAddJob()">
+                    <div class="popup-container" onclick="event.stopPropagation()">
+                        <div class="popup-header">
+                            <h3>작업 추가</h3>
+                            <button onclick="batchCloseAddJob()" class="popup-close">✕</button>
+                        </div>
+                        <div class="popup-body">
+                            <div class="setting-group">
+                                <label class="setting-label">스크립트 파일</label>
+                                <div class="path-input-group">
+                                    <input type="text" id="batch-add-script" readonly placeholder="스크립트 선택">
+                                    <button onclick="batchSelectScript()" class="btn btn-sm">📂</button>
+                                </div>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">프리셋</label>
+                                <select id="batch-add-preset">
+                                    <option value="">프리셋 선택</option>
+                                </select>
+                            </div>
+                            <div class="popup-footer">
+                                <button onclick="batchConfirmAddJob()" class="btn btn-primary">추가</button>
+                                <button onclick="batchCloseAddJob()" class="btn btn-secondary">취소</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 유튜브 탭 -->
+            <div class="tab-pane" id="tab-studio-youtube">
+                <div class="section-header">
+                    <h2>📺 유튜브</h2>
+                    <p class="section-description">유튜브 업로드 및 관리 작업을 수행합니다.</p>
+                </div>
+
+                <div class="youtube-container">
+                    <div class="youtube-section">
+                        <h3>📤 업로드</h3>
+                        <div class="setting-group">
+                            <label class="setting-label">비디오 파일</label>
+                            <div class="path-input-group">
+                                <input type="text" id="youtube-video-file" readonly placeholder="비디오 파일 선택">
+                                <button onclick="youtubeSelectVideo()" class="btn btn-sm">📂</button>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">제목</label>
+                            <input type="text" id="youtube-title" placeholder="영상 제목">
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">설명</label>
+                            <textarea id="youtube-description" rows="5" placeholder="영상 설명"></textarea>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">태그</label>
+                            <input type="text" id="youtube-tags" placeholder="태그1, 태그2, 태그3">
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">카테고리</label>
+                            <select id="youtube-category">
+                                <option value="22">브이로그</option>
+                                <option value="10">음악</option>
+                                <option value="20">게임</option>
+                                <option value="24">엔터테인먼트</option>
+                                <option value="28">과학/기술</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">공개 설정</label>
+                            <select id="youtube-privacy">
+                                <option value="private">비공개</option>
+                                <option value="unlisted">일부 공개</option>
+                                <option value="public">공개</option>
+                            </select>
+                        </div>
+                        <button onclick="youtubeUpload()" class="btn btn-primary btn-large">
+                            📤 업로드
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 관리 탭 -->
+            <div class="tab-pane" id="tab-studio-channel-manager">
+                <div class="section-header">
+                    <h2>⚙️ 채널 관리</h2>
+                    <p class="section-description">유튜브 채널 및 계정을 관리합니다.</p>
+                </div>
+
+                <div class="manager-container">
+                    <div class="manager-section">
+                        <h3>📋 등록된 채널</h3>
+                        <div class="channel-list" id="manager-channel-list">
+                            <!-- 채널 목록이 동적으로 추가됨 -->
+                        </div>
+                        <button onclick="managerAddChannel()" class="btn btn-primary">
+                            ➕ 채널 추가
+                        </button>
+                    </div>
+
+                    <div class="manager-section">
+                        <h3>🔑 API 계정</h3>
+                        <div class="account-list" id="manager-account-list">
+                            <!-- 계정 목록이 동적으로 추가됨 -->
+                        </div>
+                        <button onclick="managerAddAccount()" class="btn btn-primary">
+                            ➕ 계정 추가
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 하단 상태바 -->
+        <footer class="app-footer">
+            <div class="footer-left">
+                <span id="status-text">준비 완료</span>
+            </div>
+            <div class="footer-right">
+                <span>로이의 유튜브 v2.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src="app.js"></script>
+    <script src="studio.js"></script>
+</body>
+</html>
