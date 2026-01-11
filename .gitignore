@@ -66,3 +66,12 @@ desktop.ini
 # *.mp3
 # *.wav
 nul
+
+# OAuth 및 민감한 데이터
+json_ex/
+data/tokens/
+data/api_credentials/
+*_token.json
+*_OAuth.json
+*.credentials
+
