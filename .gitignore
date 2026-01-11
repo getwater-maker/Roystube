@@ -75,3 +75,9 @@ data/api_credentials/
 *_OAuth.json
 *.credentials
 
+
+# YouTube 자격 증명
+youtube_credentials/
+*.pickle
+client_secrets.json
+
