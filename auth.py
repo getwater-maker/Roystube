@@ -10,6 +10,7 @@ import socket
 import subprocess
 import shutil
 import threading
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from google.oauth2.credentials import Credentials
@@ -183,10 +184,24 @@ def start_auth_server(port):
 
     print(f"[인증] localhost:{port}에서 콜백 대기 중...")
     _auth_server = HTTPServer(('localhost', port), AuthHandler)
-    _auth_server.timeout = 300  # 5분 타임아웃 (충분한 시간 제공)
+    _auth_server.timeout = 1  # 1초 단위로 체크
 
-    # 단일 요청만 처리
-    _auth_server.handle_request()
+    # 최대 120초(2분) 대기
+    max_wait_time = 120
+    start_time = time.time()
+
+    while time.time() - start_time < max_wait_time:
+        _auth_server.handle_request()
+
+        # 결과를 받았으면 종료
+        if _auth_result.get('code') or _auth_result.get('error'):
+            break
+
+    # 타임아웃 확인
+    if not _auth_result.get('code') and not _auth_result.get('error'):
+        _auth_result['error'] = '로그인 시간이 초과되었습니다. (2분)'
+        print(f"[인증] 타임아웃: 2분 내에 로그인하지 않았습니다.")
+
     _auth_server.server_close()
     _auth_server = None
 
@@ -241,20 +256,28 @@ def exchange_code_for_token(flow, code, account_id=None):
 
         # 토큰 저장 경로 결정
         if account_id:
+            print(f"[토큰] account_id로 저장: {account_id}")
             token_path = account_manager.get_account_token_path(account_id)
         else:
+            print(f"[토큰] account_id가 None, 현재 계정 사용")
             # 현재 계정 또는 기본 경로
             token_path = account_manager.get_current_token_path()
             if not token_path:
                 token_path = TOKEN_FILE
 
+        print(f"[토큰] 저장 경로: {token_path}")
+
         # 토큰 저장
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
 
+        print(f"[토큰] 저장 완료")
+
         return creds
     except Exception as e:
         print(f"토큰 교환 실패: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -375,6 +398,239 @@ def is_authenticated(account_id=None):
         return False
     except Exception:
         return False
+
+
+def authenticate_with_account_id(account_id, profile_name=None):
+    """
+    완전한 OAuth 로그인 플로우를 처리합니다 (계정 ID 지정).
+
+    Args:
+        account_id: 계정 ID (토큰 저장에 사용)
+        profile_name: Chrome 프로필 이름 (계정별로 다른 프로필 사용)
+
+    Returns:
+        {
+            'success': bool,
+            'user_info': {'name': str, 'email': str, 'picture': str},
+            'error': str
+        }
+    """
+    try:
+        # 1. 사용 가능한 포트 찾기
+        port = find_free_port()
+        print(f"[인증] 사용 포트: {port}")
+
+        # 2. 인증 URL 생성
+        flow, auth_url = get_auth_url_with_localhost(port)
+        if not flow or not auth_url:
+            return {'success': False, 'error': 'OAuth 설정이 필요합니다. Client ID와 Client Secret을 입력하세요.'}
+
+        print(f"[인증] 인증 URL 생성 완료")
+
+        # 3. 브라우저에서 인증 URL 열기 (백그라운드 스레드에서)
+        browser_thread = threading.Thread(
+            target=open_auth_browser,
+            args=(auth_url, profile_name)
+        )
+        browser_thread.start()
+
+        print(f"[인증] 브라우저 열기...")
+
+        # 4. 로컬 서버 시작 및 콜백 대기
+        result = start_auth_server(port)
+
+        # 5. 인증 코드 확인
+        if result.get('error'):
+            return {'success': False, 'error': result['error']}
+
+        code = result.get('code')
+        if not code:
+            return {'success': False, 'error': '인증 코드를 받지 못했습니다.'}
+
+        print(f"[인증] 인증 코드 수신 완료")
+
+        # 6. 코드를 토큰으로 교환 (account_id 전달)
+        creds = exchange_code_for_token(flow, code, account_id=account_id)
+        if not creds:
+            return {'success': False, 'error': '토큰 교환에 실패했습니다.'}
+
+        print(f"[인증] 토큰 교환 완료")
+
+        # 7. YouTube 채널 정보로 사용자 정보 가져오기
+        try:
+            print(f"[인증] 사용자 정보 조회 시작...")
+            from googleapiclient.discovery import build
+            youtube_service = build('youtube', 'v3', credentials=creds)
+
+            # 내 채널 정보 조회
+            print(f"[인증] YouTube API 호출 중...")
+            channels_response = youtube_service.channels().list(
+                part='snippet',
+                mine=True
+            ).execute()
+
+            print(f"[인증] YouTube API 응답 수신: {len(channels_response.get('items', []))}개 채널")
+
+            if channels_response.get('items'):
+                channel = channels_response['items'][0]
+                snippet = channel['snippet']
+
+                print(f"[인증] 채널 정보 조회 성공: {snippet.get('title')}")
+
+                return {
+                    'success': True,
+                    'user_info': {
+                        'name': snippet.get('title', 'Unknown'),
+                        'email': snippet.get('customUrl', ''),
+                        'picture': snippet.get('thumbnails', {}).get('default', {}).get('url', '')
+                    }
+                }
+            else:
+                # 채널이 없는 경우
+                print(f"[인증] 채널이 없습니다")
+                return {
+                    'success': True,
+                    'user_info': {
+                        'name': 'YouTube User',
+                        'email': '',
+                        'picture': ''
+                    }
+                }
+        except Exception as e:
+            print(f"[인증] 사용자 정보 조회 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            # 사용자 정보 조회 실패해도 인증은 성공한 것으로 간주
+            return {
+                'success': True,
+                'user_info': {
+                    'name': 'YouTube User',
+                    'email': '',
+                    'picture': ''
+                }
+            }
+
+    except Exception as e:
+        print(f"[인증] 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def authenticate(profile_name=None):
+    """
+    완전한 OAuth 로그인 플로우를 처리합니다.
+
+    Args:
+        profile_name: Chrome 프로필 이름 (계정별로 다른 프로필 사용)
+
+    Returns:
+        {
+            'success': bool,
+            'user_info': {'name': str, 'email': str, 'picture': str},
+            'error': str
+        }
+    """
+    try:
+        # 1. 사용 가능한 포트 찾기
+        port = find_free_port()
+        print(f"[인증] 사용 포트: {port}")
+
+        # 2. 인증 URL 생성
+        flow, auth_url = get_auth_url_with_localhost(port)
+        if not flow or not auth_url:
+            return {'success': False, 'error': 'OAuth 설정이 필요합니다. Client ID와 Client Secret을 입력하세요.'}
+
+        print(f"[인증] 인증 URL 생성 완료")
+
+        # 3. 브라우저에서 인증 URL 열기 (백그라운드 스레드에서)
+        browser_thread = threading.Thread(
+            target=open_auth_browser,
+            args=(auth_url, profile_name)
+        )
+        browser_thread.start()
+
+        print(f"[인증] 브라우저 열기...")
+
+        # 4. 로컬 서버 시작 및 콜백 대기
+        result = start_auth_server(port)
+
+        # 5. 인증 코드 확인
+        if result.get('error'):
+            return {'success': False, 'error': result['error']}
+
+        code = result.get('code')
+        if not code:
+            return {'success': False, 'error': '인증 코드를 받지 못했습니다.'}
+
+        print(f"[인증] 인증 코드 수신 완료")
+
+        # 6. 코드를 토큰으로 교환
+        creds = exchange_code_for_token(flow, code, account_id=None)
+        if not creds:
+            return {'success': False, 'error': '토큰 교환에 실패했습니다.'}
+
+        print(f"[인증] 토큰 교환 완료")
+
+        # 7. YouTube 채널 정보로 사용자 정보 가져오기
+        try:
+            print(f"[인증] 사용자 정보 조회 시작...")
+            from googleapiclient.discovery import build
+            youtube_service = build('youtube', 'v3', credentials=creds)
+
+            # 내 채널 정보 조회
+            print(f"[인증] YouTube API 호출 중...")
+            channels_response = youtube_service.channels().list(
+                part='snippet',
+                mine=True
+            ).execute()
+
+            print(f"[인증] YouTube API 응답 수신: {len(channels_response.get('items', []))}개 채널")
+
+            if channels_response.get('items'):
+                channel = channels_response['items'][0]
+                snippet = channel['snippet']
+
+                print(f"[인증] 채널 정보 조회 성공: {snippet.get('title')}")
+
+                return {
+                    'success': True,
+                    'user_info': {
+                        'name': snippet.get('title', 'Unknown'),
+                        'email': snippet.get('customUrl', ''),
+                        'picture': snippet.get('thumbnails', {}).get('default', {}).get('url', '')
+                    }
+                }
+            else:
+                # 채널이 없는 경우
+                print(f"[인증] 채널이 없습니다")
+                return {
+                    'success': True,
+                    'user_info': {
+                        'name': 'YouTube User',
+                        'email': '',
+                        'picture': ''
+                    }
+                }
+        except Exception as e:
+            print(f"[인증] 사용자 정보 조회 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            # 사용자 정보 조회 실패해도 인증은 성공한 것으로 간주
+            return {
+                'success': True,
+                'user_info': {
+                    'name': 'YouTube User',
+                    'email': '',
+                    'picture': ''
+                }
+            }
+
+    except Exception as e:
+        print(f"[인증] 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
 
 
 def logout(account_id=None):

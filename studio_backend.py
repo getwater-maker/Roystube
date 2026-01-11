@@ -14,6 +14,7 @@ from tkinter import filedialog
 import tkinter as tk
 from datetime import datetime
 from collections import deque
+from data_path import DATA_DIR
 
 # ========== 백엔드 로그 수집기 ==========
 class BackendLogCollector:
@@ -165,6 +166,96 @@ def get_encoder_preset(codec):
     else:
         return 'ultrafast'  # CPU 인코더는 ultrafast 사용
 
+def apply_audio_speed_ffmpeg(input_path, output_path, speed):
+    """FFmpeg를 사용하여 오디오 속도 변환 (피치 유지)
+
+    Args:
+        input_path: 입력 MP3 파일 경로
+        output_path: 출력 MP3 파일 경로
+        speed: 속도 배율 (0.5 ~ 2.0, 1.0 = 원본)
+
+    Returns:
+        bool: 성공 여부
+    """
+    if speed == 1.0:
+        # 속도 변환 필요 없음 - 파일 복사
+        import shutil
+        shutil.copy(input_path, output_path)
+        return True
+
+    try:
+        # atempo 필터는 0.5 ~ 2.0 범위만 지원
+        # 그 외 범위는 체인으로 연결해야 함
+        if speed < 0.5:
+            # 예: 0.25 = 0.5 * 0.5
+            atempo_chain = []
+            remaining = speed
+            while remaining < 0.5:
+                atempo_chain.append('atempo=0.5')
+                remaining *= 2
+            atempo_chain.append(f'atempo={remaining:.4f}')
+            atempo_filter = ','.join(atempo_chain)
+        elif speed > 2.0:
+            # 예: 4.0 = 2.0 * 2.0
+            atempo_chain = []
+            remaining = speed
+            while remaining > 2.0:
+                atempo_chain.append('atempo=2.0')
+                remaining /= 2
+            atempo_chain.append(f'atempo={remaining:.4f}')
+            atempo_filter = ','.join(atempo_chain)
+        else:
+            atempo_filter = f'atempo={speed:.4f}'
+
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', input_path,
+            '-filter:a', atempo_filter,
+            '-vn',  # 비디오 스트림 제외
+            output_path
+        ]
+
+        print(f"[RoyStudio] FFmpeg 속도 변환: {speed}x ({atempo_filter})")
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+        if result.returncode == 0:
+            print(f"[RoyStudio] 속도 변환 완료: {output_path}")
+            return True
+        else:
+            print(f"[ERROR] FFmpeg 속도 변환 실패: {result.stderr}")
+            return False
+
+    except Exception as e:
+        print(f"[ERROR] FFmpeg 속도 변환 오류: {e}")
+        return False
+
+
+def get_audio_duration(file_path):
+    """오디오 파일의 재생 시간(초) 반환"""
+    try:
+        result = subprocess.run(
+            [
+                'ffprobe', '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1',
+                file_path
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        return float(result.stdout.strip())
+    except Exception as e:
+        print(f"[ERROR] 오디오 길이 확인 실패: {e}")
+        return None
+
+
 def format_srt_time(seconds):
     """초를 SRT 시간 형식(00:00:00,000)으로 변환"""
     hours = int(seconds // 3600)
@@ -222,6 +313,15 @@ else:
     STUDIO_PROFILES_FILE = os.path.join(STUDIO_DATA_DIR, 'profiles.json')
     STUDIO_PRESETS_FILE = os.path.join(STUDIO_DATA_DIR, 'presets.json')
     STUDIO_DEFAULTS_FILE = os.path.join(STUDIO_DATA_DIR, 'defaults.json')
+
+# 캐릭터 데이터베이스 파일
+STUDIO_CHARACTERS_DB_FILE = os.path.join(STUDIO_DATA_DIR, 'characters_db.json')
+
+# 앱 설정 파일
+APP_SETTINGS_FILE = os.path.join(STUDIO_DATA_DIR, 'app_settings.json')
+
+# 음성 설정 파일 (프로젝트 루트)
+VOICES_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'voices_config.json')
 
 # 데이터 디렉토리 생성
 os.makedirs(STUDIO_DATA_DIR, exist_ok=True)
@@ -547,6 +647,160 @@ def studio_delete_preset(preset_name):
             studio_save_json_file(STUDIO_PRESETS_FILE, presets)
         return {'success': True}
     except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
+# ========== 캐릭터 데이터베이스 API ==========
+
+@eel.expose
+def studio_load_characters_db():
+    """캐릭터 데이터베이스 로드"""
+    try:
+        db = studio_load_json_file(STUDIO_CHARACTERS_DB_FILE)
+        # 구조: { "캐릭터명": { "voice": "...", "speed": 1.0, "pitch": 0, "volume": 100, "emotion": "neutral" } }
+        return {'success': True, 'characters': db}
+    except Exception as e:
+        print(f"[RoyStudio] 캐릭터 DB 로드 오류: {e}")
+        return {'success': False, 'error': str(e), 'characters': {}}
+
+
+@eel.expose
+def studio_save_character_to_db(character_data):
+    """캐릭터를 데이터베이스에 저장
+
+    Args:
+        character_data: { 'name': '캐릭터명', 'voice': '...', 'speed': 1.0, 'pitch': 0, 'volume': 100 }
+    """
+    try:
+        db = studio_load_json_file(STUDIO_CHARACTERS_DB_FILE)
+
+        name = character_data.get('name')
+        if not name or name.strip() == '':
+            return {'success': False, 'error': '유효하지 않은 캐릭터 이름입니다.'}
+
+        # 캐릭터 정보 저장 (name 제외)
+        db[name] = {
+            'voice': character_data.get('voice', 'ko-KR-Wavenet-A'),
+            'speed': character_data.get('speed', 1.0),
+            'pitch': character_data.get('pitch', 0),
+            'postSpeed': character_data.get('postSpeed', 1.0),  # MP3 후처리 속도
+            'volume': character_data.get('volume', 100),
+            'color': character_data.get('color')  # 캐릭터 색상
+        }
+
+        studio_save_json_file(STUDIO_CHARACTERS_DB_FILE, db)
+        print(f"[RoyStudio] 캐릭터 '{name}' 데이터베이스에 저장됨")
+
+        return {'success': True, 'message': f"'{name}' 저장됨"}
+    except Exception as e:
+        print(f"[RoyStudio] 캐릭터 저장 오류: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def studio_check_new_characters(detected_characters):
+    """발견된 캐릭터 중 신규 캐릭터 확인
+
+    Args:
+        detected_characters: ['캐릭터1', '캐릭터2', ...]
+
+    Returns:
+        {
+            'newCharacters': ['신규1', '신규2'],
+            'existingCharacters': {'캐릭터명': {...설정...}},
+            'voiceGroups': {'voice_key': ['캐릭터1', '캐릭터2']}  # 동일 음성 설정 그룹
+        }
+    """
+    try:
+        db = studio_load_json_file(STUDIO_CHARACTERS_DB_FILE)
+
+        new_characters = []
+        existing_characters = {}
+
+        for char_name in detected_characters:
+            if char_name in db:
+                # 기존 캐릭터
+                existing_characters[char_name] = db[char_name]
+            else:
+                # 신규 캐릭터
+                new_characters.append(char_name)
+
+        # 동일한 음성 설정을 가진 캐릭터 그룹 찾기
+        voice_groups = {}
+        for char_name, settings in existing_characters.items():
+            # 음성 설정의 고유 키 생성 (voice, speed, pitch를 조합)
+            voice_key = f"{settings['voice']}_{settings['speed']}_{settings['pitch']}"
+            if voice_key not in voice_groups:
+                voice_groups[voice_key] = []
+            voice_groups[voice_key].append(char_name)
+
+        # 2개 이상인 그룹만 반환
+        voice_groups = {k: v for k, v in voice_groups.items() if len(v) >= 2}
+
+        print(f"[RoyStudio] 신규 캐릭터: {new_characters}")
+        print(f"[RoyStudio] 기존 캐릭터: {list(existing_characters.keys())}")
+        print(f"[RoyStudio] 동일 음성 그룹: {voice_groups}")
+
+        return {
+            'success': True,
+            'newCharacters': new_characters,
+            'existingCharacters': existing_characters,
+            'voiceGroups': voice_groups
+        }
+    except Exception as e:
+        print(f"[RoyStudio] 캐릭터 확인 오류: {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'newCharacters': [],
+            'existingCharacters': {},
+            'voiceGroups': {}
+        }
+
+
+@eel.expose
+def studio_get_all_characters():
+    """데이터베이스의 모든 캐릭터 조회"""
+    try:
+        db = studio_load_json_file(STUDIO_CHARACTERS_DB_FILE)
+        print(f"[RoyStudio] 전체 캐릭터 조회: {len(db)}개")
+        return {'success': True, 'characters': db}
+    except Exception as e:
+        print(f"[RoyStudio] 캐릭터 조회 오류: {e}")
+        return {'success': False, 'error': str(e), 'characters': {}}
+
+
+@eel.expose
+def get_voices_config():
+    """음성 설정 파일에서 전체 음성 목록 조회"""
+    try:
+        if os.path.exists(VOICES_CONFIG_FILE):
+            with open(VOICES_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                voices = config.get('voices', [])
+                print(f"[RoyStudio] 음성 목록 로드: {len(voices)}개")
+                return {'success': True, 'voices': voices}
+        else:
+            print(f"[RoyStudio] 음성 설정 파일 없음: {VOICES_CONFIG_FILE}")
+            return {'success': False, 'error': '음성 설정 파일을 찾을 수 없습니다.', 'voices': []}
+    except Exception as e:
+        print(f"[RoyStudio] 음성 설정 로드 오류: {e}")
+        return {'success': False, 'error': str(e), 'voices': []}
+
+
+@eel.expose
+def studio_delete_character_from_db(character_name):
+    """캐릭터 데이터베이스에서 삭제"""
+    try:
+        db = studio_load_json_file(STUDIO_CHARACTERS_DB_FILE)
+        if character_name in db:
+            del db[character_name]
+            studio_save_json_file(STUDIO_CHARACTERS_DB_FILE, db)
+            print(f"[RoyStudio] 캐릭터 '{character_name}' 삭제됨")
+            return {'success': True, 'message': f"'{character_name}' 삭제됨"}
+        return {'success': False, 'error': '캐릭터를 찾을 수 없습니다.'}
+    except Exception as e:
+        print(f"[RoyStudio] 캐릭터 삭제 오류: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1121,6 +1375,93 @@ def studio_synthesize_tts(profile_name, text, voice_name, rate=1.0, pitch=0.0):
         return {'success': False, 'error': str(e)}
 
 
+@eel.expose
+def studio_preview_character_voice(character_data):
+    """캐릭터 음성 미리듣기"""
+    if not STUDIO_MODULES_LOADED:
+        return {'success': False, 'error': '핵심 모듈이 로드되지 않았습니다.'}
+
+    try:
+        import base64
+        import tempfile
+
+        # 프로필 이름 가져오기 (첫 번째 프로필 사용)
+        profiles = studio_get_profiles()
+        profile_name = profiles[0] if profiles else 'default'
+
+        # 테스트 텍스트
+        test_text = "안녕하세요. 이 음성으로 TTS를 생성합니다."
+
+        voice_name = character_data.get('voice', 'ko-KR-Wavenet-A')
+        speed = character_data.get('speed', 1.0)
+        pitch = character_data.get('pitch', 0)
+
+        audio_bytes = services.synthesize_tts_bytes(
+            profile_name=profile_name,
+            text=test_text,
+            api_voice=voice_name,
+            rate=speed,
+            pitch=pitch
+        )
+
+        if audio_bytes:
+            # Base64로 인코딩하여 브라우저에서 직접 재생
+            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+            return {'success': True, 'audioData': audio_base64}
+        else:
+            return {'success': False, 'error': 'TTS 생성 실패'}
+
+    except Exception as e:
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def studio_preview_sentence(sentence_data, character_data):
+    """문장 미리듣기"""
+    if not STUDIO_MODULES_LOADED:
+        return {'success': False, 'error': '핵심 모듈이 로드되지 않았습니다.'}
+
+    try:
+        import base64
+        import re
+
+        # 프로필 이름 가져오기
+        profiles = studio_get_profiles()
+        profile_name = profiles[0] if profiles else 'default'
+
+        text = sentence_data.get('text', '')
+        voice_name = character_data.get('voice', 'ko-KR-Wavenet-A')
+        speed = character_data.get('speed', 1.0)
+        pitch = character_data.get('pitch', 0)
+
+        # HTML 태그 제거 (<br> 등)
+        text = re.sub(r'<[^>]+>', ' ', text)
+        text = text.strip()
+
+        if not text:
+            return {'success': False, 'error': '텍스트가 없습니다.'}
+
+        audio_bytes = services.synthesize_tts_bytes(
+            profile_name=profile_name,
+            text=text,
+            api_voice=voice_name,
+            rate=speed,
+            pitch=pitch
+        )
+
+        if audio_bytes:
+            # Base64로 인코딩하여 브라우저에서 직접 재생
+            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+            return {'success': True, 'audioData': audio_base64}
+        else:
+            return {'success': False, 'error': 'TTS 생성 실패'}
+
+    except Exception as e:
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
 # ========== FFmpeg 체크 ==========
 
 @eel.expose
@@ -1136,6 +1477,1381 @@ def studio_check_ffmpeg():
 
 
 # ========== 유틸리티 ==========
+
+@eel.expose
+def get_file_as_base64(file_path):
+    """파일을 base64로 인코딩하여 반환 (이미지 미리보기용)"""
+    try:
+        import base64
+        from pathlib import Path
+
+        if not os.path.exists(file_path):
+            return {'success': False, 'error': '파일을 찾을 수 없습니다.'}
+
+        # 파일 확장자 확인
+        ext = Path(file_path).suffix.lower()
+
+        # 이미지 파일만 처리
+        if ext not in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
+            return {'success': False, 'error': '지원하지 않는 파일 형식입니다.'}
+
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+            base64_data = base64.b64encode(file_data).decode('utf-8')
+
+        return {'success': True, 'data': base64_data}
+
+    except Exception as e:
+        print(f"[ERROR] get_file_as_base64 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def open_file_with_default_app(file_path):
+    """기본 앱으로 파일 열기 (오디오 미리듣기용)"""
+    try:
+        import subprocess
+        import platform
+
+        if not os.path.exists(file_path):
+            return {'success': False, 'error': '파일을 찾을 수 없습니다.'}
+
+        system = platform.system()
+
+        if system == 'Windows':
+            os.startfile(file_path)
+        elif system == 'Darwin':  # macOS
+            subprocess.run(['open', file_path])
+        else:  # Linux
+            subprocess.run(['xdg-open', file_path])
+
+        return {'success': True}
+
+    except Exception as e:
+        print(f"[ERROR] open_file_with_default_app 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def insert_line_break(text, max_chars_per_line=15):
+    """텍스트를 2줄로 나누고 \\n 삽입 (단어 단위 보존)
+
+    Args:
+        text: 분리할 텍스트 (15-30자)
+        max_chars_per_line: 줄당 최대 글자 수 (기본 15자)
+
+    Returns:
+        \\n이 삽입된 텍스트 또는 None (분리 불가능한 경우)
+    """
+    if len(text) <= max_chars_per_line:
+        return text
+
+    words = text.split()
+
+    # 단어가 없으면 (공백이 없는 긴 단어) 강제로 자르기
+    if len(words) == 1:
+        line1 = text[:max_chars_per_line]
+        line2 = text[max_chars_per_line:]
+    else:
+        # 첫 줄을 채울 수 있는 최대 지점 찾기 (단어 단위 보존)
+        line1 = ""
+        best_split = None
+
+        for i in range(1, len(words) + 1):
+            line1_test = ' '.join(words[:i])
+            line2_test = ' '.join(words[i:]) if i < len(words) else ""
+
+            # 첫 줄이 15자 이하이고, 두 번째 줄도 15자 이하인 경우
+            if len(line1_test) <= max_chars_per_line:
+                if not line2_test or len(line2_test) <= max_chars_per_line:
+                    best_split = i  # 계속 갱신 (가장 마지막 유효한 지점 선택)
+
+        # 최적 분리점이 있으면 사용
+        if best_split is not None:
+            line1 = ' '.join(words[:best_split])
+            line2 = ' '.join(words[best_split:])
+
+            # 첫 줄 끝 단어가 너무 짧으면 (3자 이하) 두 번째 줄로 이동
+            if best_split > 1 and len(words[best_split - 1]) <= 3:
+                # 마지막 단어를 두 번째 줄로 이동
+                line1 = ' '.join(words[:best_split - 1])
+                line2 = ' '.join(words[best_split - 1:])
+
+                # 이동 후 첫 줄이 너무 짧아지면 원래대로 복원
+                if len(line1) < 8:  # 최소 8자는 유지
+                    line1 = ' '.join(words[:best_split])
+                    line2 = ' '.join(words[best_split:])
+        else:
+            # 최적 분리점이 없으면 None 반환 (상위 함수에서 재분리)
+            return None
+
+    # 두 번째 줄이 너무 길면 None 반환 (상위 함수에서 재분리)
+    if len(line2) > max_chars_per_line:
+        return None
+
+    return line1 + '\n' + line2
+
+
+def split_long_sentence(text, max_chars_per_line=15, max_lines=2):
+    """긴 문장을 2줄 이내로 분리하고 줄바꿈 삽입 (단어 단위 보존)
+
+    Args:
+        text: 분리할 문장
+        max_chars_per_line: 줄당 최대 글자 수 (기본 15자)
+        max_lines: 최대 줄 수 (기본 2줄)
+
+    Returns:
+        분리된 문장 리스트 (각 항목은 \\n으로 구분된 1-2줄)
+    """
+    total_max = max_chars_per_line * max_lines  # 30자
+
+    # 전체 길이가 15자 이하면 1줄로 반환
+    if len(text) <= max_chars_per_line:
+        return [text]
+
+    # 15자 초과 30자 이하: 쉼표 사용하지 않고 2줄로 분리
+    if len(text) <= total_max:
+        split_result = insert_line_break(text, max_chars_per_line)
+        if split_result:
+            return [split_result]
+        # 분리 실패: 단어 단위로 분리
+        return split_by_words(text, max_chars_per_line, total_max)
+
+    # 30자 초과: 쉼표가 있는지 확인
+    if ',' not in text:
+        # 쉼표 없음: 단어 단위 분리
+        return split_by_words(text, max_chars_per_line, total_max)
+
+    # 쉼표가 있고 30자 초과: 쉼표로 분리하되, 나열인지 확인
+    comma_parts = [p.strip() for p in text.split(',') if p.strip()]
+
+    # 나열 항목 감지: 쉼표로 구분된 항목이 모두 짧으면 (5자 이하) 나열로 간주
+    is_enumeration = all(len(part) <= 5 for part in comma_parts) and len(comma_parts) >= 3
+
+    # 쉼표로 분리했을 때 너무 짧은 부분이 있는지 확인
+    has_too_short_part = any(len(part) < 10 for part in comma_parts)
+
+    if is_enumeration or has_too_short_part:
+        # 나열이거나 너무 짧은 부분이 있으면: 쉼표로 나누지 말고 단어 단위로 분리
+        return split_by_words(text, max_chars_per_line, total_max)
+
+    # 일반 문장: 쉼표로 분리 (쉼표 보존)
+    result = []
+    for i, part in enumerate(comma_parts):
+        # 마지막 항목이 아니면 쉼표 추가
+        if i < len(comma_parts) - 1:
+            part_with_comma = part + ','
+        else:
+            part_with_comma = part
+
+        if len(part_with_comma) <= max_chars_per_line:
+            # 15자 이하: 1줄
+            result.append(part_with_comma)
+        elif len(part_with_comma) <= total_max:
+            # 15-30자: 2줄로 분리
+            split_result = insert_line_break(part_with_comma, max_chars_per_line)
+            if split_result:
+                result.append(split_result)
+            else:
+                # 분리 실패: 단어 단위로 재분리
+                sub_results = split_by_words(part_with_comma, max_chars_per_line, total_max)
+                result.extend(sub_results)
+        else:
+            # 30자 초과: 단어 단위 분리
+            sub_results = split_by_words(part_with_comma, max_chars_per_line, total_max)
+            result.extend(sub_results)
+
+    return result
+
+
+def split_by_words(text, max_chars_per_line=15, total_max=30):
+    """단어 단위로 텍스트 분리 (30자 초과 방지)"""
+    words = text.split()
+    result = []
+    current = ""
+
+    for word in words:
+        test = (current + ' ' + word) if current else word
+
+        # 30자를 초과하지 않으면 계속 누적
+        if len(test.replace('\n', '')) <= total_max:
+            current = test
+        else:
+            # 현재까지 누적된 것을 저장
+            if current:
+                # 15자 초과면 2줄로 분리 시도
+                if len(current.replace('\n', '')) > max_chars_per_line:
+                    split_result = insert_line_break(current, max_chars_per_line)
+                    if split_result:
+                        result.append(split_result)
+                    else:
+                        # 분리 불가능: 강제로 15자씩 자르기
+                        result.append(current[:max_chars_per_line] + '\n' + current[max_chars_per_line:total_max])
+                        if len(current) > total_max:
+                            # 30자 초과 부분은 다음 클립으로
+                            current = current[total_max:]
+                            continue
+                else:
+                    result.append(current)
+            # 새로운 클립 시작
+            current = word
+
+    # 마지막 누적분 처리
+    if current:
+        if len(current.replace('\n', '')) > max_chars_per_line:
+            split_result = insert_line_break(current, max_chars_per_line)
+            if split_result:
+                result.append(split_result)
+            else:
+                # 분리 불가능: 강제로 15자씩 자르기
+                result.append(current[:max_chars_per_line] + '\n' + current[max_chars_per_line:total_max])
+        else:
+            result.append(current)
+
+    return result
+
+
+def smart_split_sentences(text, max_chars_per_line=15, max_lines=2, min_chars=10):
+    """문장 단위로 분리 (TTS용)
+
+    Args:
+        text: 분리할 텍스트
+        max_chars_per_line: 사용 안 함 (하위 호환성을 위해 유지)
+        max_lines: 사용 안 함 (하위 호환성을 위해 유지)
+        min_chars: 사용 안 함 (하위 호환성을 위해 유지)
+
+    Returns:
+        분리된 문장 리스트 (마침표, 물음표, 느낌표 기준)
+    """
+    import re
+
+    # 문장 단위로 분리 (마침표, 물음표, 느낌표 기준)
+    # 한글 및 영문 구두점 모두 지원
+    sentence_pattern = re.compile(r'([.!?。!?]+)')
+
+    # 구두점으로 분리
+    parts = sentence_pattern.split(text)
+
+    # 텍스트와 구두점을 다시 합치기
+    sentences = []
+    for i in range(0, len(parts)-1, 2):
+        text_part = parts[i].strip()
+        punct = parts[i+1] if i+1 < len(parts) else ''
+        if text_part:
+            sentences.append(text_part + punct)
+
+    # 마지막 부분 처리 (구두점 없이 끝나는 경우)
+    if len(parts) % 2 == 1 and parts[-1].strip():
+        sentences.append(parts[-1].strip())
+
+    return sentences
+
+
+def format_subtitle_two_lines(text, line_max=15):
+    """자막 텍스트를 두 줄로 포맷팅
+
+    Args:
+        text: 자막 텍스트 (최대 30자)
+        line_max: 한 줄당 최대 글자 수 (기본 15자)
+
+    Returns:
+        두 줄로 포맷된 텍스트 (줄바꿈 포함)
+    """
+    text = text.strip()
+
+    # 15자 이하면 한 줄로
+    if len(text) <= line_max:
+        return text
+
+    # 중간 지점 찾기
+    mid = len(text) // 2
+
+    # 중간 근처에서 공백이나 쉼표 찾기 (자연스러운 줄바꿈)
+    best_break = mid
+    for offset in range(min(5, mid)):  # 중간에서 ±5자 범위에서 탐색
+        # 중간 오른쪽 탐색
+        if mid + offset < len(text) and text[mid + offset] in ' ,':
+            best_break = mid + offset + 1
+            break
+        # 중간 왼쪽 탐색
+        if mid - offset > 0 and text[mid - offset] in ' ,':
+            best_break = mid - offset + 1
+            break
+
+    line1 = text[:best_break].strip()
+    line2 = text[best_break:].strip()
+
+    # 둘 다 내용이 있으면 두 줄, 아니면 한 줄
+    if line1 and line2:
+        return f"{line1}\n{line2}"
+    return text
+
+
+def split_text_for_subtitle(text, max_length=30):
+    """자막 표시용으로 텍스트를 자연스럽게 분할
+
+    분할 우선순위:
+    1. 쉼표(,) - 가장 자연스러운 끊김
+    2. 조사 뒤 (~은, ~는, ~이, ~가, ~를, ~에서 등)
+    3. 연결어미 뒤 (~고, ~며, ~면, ~서 등)
+    4. 공백 - 위 조건 없을 때
+
+    Args:
+        text: 분할할 텍스트
+        max_length: 최대 글자 수 (기본 30자)
+
+    Returns:
+        분할된 텍스트 리스트
+    """
+    import re
+
+    text = text.strip()
+    if len(text) <= max_length:
+        return [text]
+
+    clips = []
+
+    # 1단계: 쉼표로 먼저 분할 시도 (나열이 아닌 경우)
+    if ',' in text:
+        comma_parts = text.split(',')
+        # 나열인지 확인 (쉼표 사이 평균 길이가 짧으면 나열)
+        if len(comma_parts) >= 3:
+            avg_len = sum(len(p.strip()) for p in comma_parts[:-1]) / (len(comma_parts) - 1)
+            is_enumeration = avg_len < 6  # 평균 6자 미만이면 나열로 판단
+        else:
+            is_enumeration = False
+
+        # 나열이 아니면 쉼표에서 분할
+        if not is_enumeration and len(comma_parts) >= 2:
+            temp_clips = []
+            for i, part in enumerate(comma_parts):
+                part = part.strip()
+                if i < len(comma_parts) - 1:
+                    part += ','  # 쉼표 유지
+                if part:
+                    temp_clips.append(part)
+
+            # 쉼표로 나눈 각 부분이 max_length 이하인지 확인
+            all_fit = all(len(p) <= max_length for p in temp_clips)
+            if all_fit:
+                return temp_clips
+            else:
+                # 쉼표로 나눈 부분들을 다시 처리
+                for part in temp_clips:
+                    if len(part) <= max_length:
+                        clips.append(part)
+                    else:
+                        # 긴 부분은 추가 분할
+                        clips.extend(_split_by_grammar(part, max_length))
+                return clips if clips else [text]
+
+    # 2단계: 문법 기반 분할
+    return _split_by_grammar(text, max_length)
+
+
+def _split_by_grammar(text, max_length=30):
+    """문법 기반으로 텍스트 분할
+
+    조사와 연결어미를 기준으로 자연스럽게 분할
+    """
+    import re
+
+    text = text.strip()
+    if len(text) <= max_length:
+        return [text]
+
+    clips = []
+    remaining = text
+
+    # 분할 지점 패턴 (우선순위 순)
+    # 1. 조사 뒤 (~은, ~는, ~이, ~가, ~를, ~에서, ~에게, ~으로, ~와, ~과)
+    # 2. 연결어미 뒤 (~고, ~며, ~면, ~서, ~니, ~지만, ~는데, ~어서, ~아서)
+    break_patterns = [
+        r'(은|는|이|가|을|를|에서|에게|으로|로|와|과|의|도|만|부터|까지|처럼|같이)\s',  # 조사 + 공백
+        r'(하고|되고|고|며|면|서|니|지만|는데|어서|아서|으며|으면)\s',  # 연결어미 + 공백
+        r'(합니다|입니다|됩니다|습니다|있다|없다|했다|됐다)[,.]?\s',  # 문장 종결 + 공백
+    ]
+
+    while len(remaining) > max_length:
+        best_break = -1
+        best_priority = 999
+
+        # max_length 범위 내에서 분할 지점 찾기
+        search_range = remaining[:max_length + 10]  # 약간 여유 있게 탐색
+
+        for priority, pattern in enumerate(break_patterns):
+            matches = list(re.finditer(pattern, search_range))
+            for match in reversed(matches):  # 뒤에서부터 찾기
+                end_pos = match.end()
+                if end_pos <= max_length and end_pos > best_break:
+                    # 너무 짧은 분할은 피함 (최소 10자)
+                    if end_pos >= 10 or best_break == -1:
+                        best_break = end_pos
+                        best_priority = priority
+                        break
+            if best_break > 0 and best_priority == priority:
+                break
+
+        # 패턴을 못 찾으면 공백에서 분할
+        if best_break <= 0:
+            # max_length 근처의 공백 찾기
+            for i in range(min(max_length, len(remaining)) - 1, max(0, max_length - 15), -1):
+                if remaining[i] == ' ':
+                    best_break = i + 1
+                    break
+
+        # 그래도 못 찾으면 강제 분할
+        if best_break <= 0:
+            best_break = max_length
+
+        clip = remaining[:best_break].strip()
+        if clip:
+            clips.append(clip)
+        remaining = remaining[best_break:].strip()
+
+    # 남은 텍스트 추가
+    if remaining:
+        clips.append(remaining)
+
+    return clips if clips else [text]
+
+
+def match_subtitle_with_word_timestamps(subtitle_clips, word_timestamps):
+    """자막 클립과 Whisper word timestamps 매칭
+
+    Whisper가 인식한 단어들을 순차적으로 클립 텍스트와 매칭하여
+    각 클립의 시작/종료 시간을 정확하게 찾습니다.
+
+    Args:
+        subtitle_clips: 자막 클립 리스트 [{'text': str, 'character': str}, ...]
+        word_timestamps: Whisper word timestamps [{'word': str, 'start': float, 'end': float}, ...]
+
+    Returns:
+        타임코드가 추가된 자막 클립 리스트
+    """
+    import re
+
+    if not word_timestamps:
+        print("[RoyStudio] ⚠️ Whisper 단어 타임스탬프가 없습니다.")
+        return subtitle_clips
+
+    print(f"[RoyStudio] 타임코드 매칭 시작: {len(subtitle_clips)}개 클립, {len(word_timestamps)}개 단어")
+
+    # 텍스트 정규화 함수 (공백, 특수문자, 구두점 제거)
+    def normalize(text):
+        if not text:
+            return ''
+        # 공백, 구두점, 특수문자 제거
+        return re.sub(r'[\s,\.!?\-\'"…""''·:;~()（）\[\]「」『』]', '', text).lower()
+
+    # Whisper 인식 텍스트 전체를 하나로 합침
+    whisper_full_text = ''.join(normalize(w['word']) for w in word_timestamps)
+
+    # 각 단어의 누적 글자 위치 계산 (정규화된 텍스트 기준)
+    word_char_positions = []  # [(start_char_idx, end_char_idx, start_time, end_time), ...]
+    char_idx = 0
+    for w in word_timestamps:
+        word_norm = normalize(w['word'])
+        word_len = len(word_norm)
+        if word_len > 0:
+            word_char_positions.append({
+                'start_char': char_idx,
+                'end_char': char_idx + word_len,
+                'start_time': w['start'],
+                'end_time': w['end'],
+                'word': w['word']
+            })
+            char_idx += word_len
+
+    total_whisper_chars = char_idx
+    print(f"[RoyStudio]   Whisper 인식 텍스트: {total_whisper_chars}자")
+
+    # 클립 텍스트도 전체를 하나로 합침
+    clip_full_text = ''.join(normalize(c.get('text', '')) for c in subtitle_clips)
+    total_clip_chars = len(clip_full_text)
+    print(f"[RoyStudio]   원본 클립 텍스트: {total_clip_chars}자")
+
+    # 누적 클립 글자 수를 Whisper 글자 위치에 매핑
+    cumulative_clip_chars = 0
+
+    for idx, clip in enumerate(subtitle_clips):
+        clip_text = clip.get('text', '')
+        clip_norm = normalize(clip_text)
+        clip_len = len(clip_norm)
+
+        if clip_len == 0:
+            # 빈 클립 처리
+            if idx > 0:
+                prev_end = subtitle_clips[idx-1].get('endTime', '00:00:00.000')
+                clip['startTime'] = prev_end
+                clip['endTime'] = prev_end
+            else:
+                clip['startTime'] = format_time(word_timestamps[0]['start'])
+                clip['endTime'] = format_time(word_timestamps[0]['start'])
+            continue
+
+        # 클립 시작 위치 (Whisper 텍스트 기준으로 환산)
+        clip_start_ratio = cumulative_clip_chars / total_clip_chars if total_clip_chars > 0 else 0
+        whisper_start_char = int(clip_start_ratio * total_whisper_chars)
+
+        # 클립 종료 위치
+        cumulative_clip_chars += clip_len
+        clip_end_ratio = cumulative_clip_chars / total_clip_chars if total_clip_chars > 0 else 1
+        whisper_end_char = int(clip_end_ratio * total_whisper_chars)
+
+        # 해당 글자 범위에 속하는 단어들 찾기
+        start_time = None
+        end_time = None
+
+        for wp in word_char_positions:
+            # 이 단어가 클립 범위와 겹치는지 확인
+            if wp['end_char'] > whisper_start_char and wp['start_char'] < whisper_end_char:
+                if start_time is None:
+                    start_time = wp['start_time']
+                end_time = wp['end_time']
+
+        # 매칭 실패 시 이전/다음 클립 기준으로 추정
+        if start_time is None or end_time is None:
+            if idx > 0 and 'endTime' in subtitle_clips[idx-1]:
+                prev_end_str = subtitle_clips[idx-1]['endTime']
+                start_time = time_to_seconds(prev_end_str)
+                # 글자 수 기반 추정 시간 (1글자당 약 0.15초)
+                end_time = start_time + (clip_len * 0.15)
+            else:
+                start_time = 0
+                end_time = clip_len * 0.15
+
+        clip['startTime'] = format_time(start_time)
+        clip['endTime'] = format_time(end_time)
+        clip['_start_sec'] = start_time  # 임시 저장 (보정용)
+        clip['_end_sec'] = end_time
+
+    # 타임코드 순차 보정: 이전 클립보다 시작이 빠르면 조정
+    print(f"[RoyStudio] 타임코드 순차 보정 중...")
+    corrections = 0
+    for idx, clip in enumerate(subtitle_clips):
+        if idx == 0:
+            continue
+
+        prev_clip = subtitle_clips[idx - 1]
+        prev_end = prev_clip.get('_end_sec', 0)
+        curr_start = clip.get('_start_sec', 0)
+        curr_end = clip.get('_end_sec', 0)
+
+        # 현재 클립 시작이 이전 클립 종료보다 빠르면 보정
+        if curr_start < prev_end:
+            corrections += 1
+            # 이전 클립 종료 시간으로 시작 조정
+            new_start = prev_end
+            # 종료 시간도 비례해서 조정 (최소 0.5초 보장)
+            duration = max(curr_end - curr_start, 0.5)
+            new_end = new_start + duration
+
+            clip['startTime'] = format_time(new_start)
+            clip['endTime'] = format_time(new_end)
+            clip['_start_sec'] = new_start
+            clip['_end_sec'] = new_end
+
+    # 임시 키 제거
+    for clip in subtitle_clips:
+        clip.pop('_start_sec', None)
+        clip.pop('_end_sec', None)
+
+    # 디버그 로그
+    print(f"[RoyStudio]   → {corrections}개 클립 타임코드 보정됨")
+    for idx, clip in enumerate(subtitle_clips[:5]):
+        print(f"[RoyStudio]   클립 {idx+1}: {clip['startTime']} ~ {clip['endTime']} '{clip.get('text', '')[:25]}...'")
+
+    print(f"[RoyStudio] 타임코드 매칭 완료")
+    return subtitle_clips
+
+
+@eel.expose
+def load_script_for_studio(file_path):
+    """대본 파일을 로드하고 문장 단위로 분석"""
+    try:
+        from pathlib import Path
+
+        if not os.path.exists(file_path):
+            return {'success': False, 'error': '파일을 찾을 수 없습니다.'}
+
+        ext = Path(file_path).suffix.lower()
+
+        # TXT 파일 처리
+        if ext == '.txt':
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+        # DOCX 파일 처리
+        elif ext == '.docx':
+            try:
+                from docx import Document
+                doc = Document(file_path)
+                content = '\n'.join([para.text for para in doc.paragraphs])
+            except ImportError:
+                return {'success': False, 'error': 'python-docx 모듈이 설치되어 있지 않습니다.'}
+        else:
+            return {'success': False, 'error': '지원하지 않는 파일 형식입니다.'}
+
+        # 특수기호 정리: 마침표, 쉼표, 물음표, 느낌표, 대괄호만 유지
+        import re
+        # 한글, 영문, 숫자, 공백, 줄바꿈, 그리고 허용된 문장부호만 남기기
+        # 대괄호[]는 캐릭터명 표시에 사용되므로 유지
+        allowed_chars = re.compile(r'[^가-힣a-zA-Z0-9\s\n.,!?。、！？\[\]]')
+        content = allowed_chars.sub('', content)
+
+        # 스마트 문장 분리 (줄당 15자, 최대 2줄, 최소 10자)
+        # 먼저 줄바꿈으로 문단 분리
+        paragraphs = content.strip().split('\n')
+
+        all_sentences = []
+        sentence_characters = []  # 각 문장의 캐릭터명 저장
+
+        import re
+        character_pattern = re.compile(r'^\[([^\]]+)\]\s*(.+)$')  # [캐릭터명] 텍스트
+
+        current_character = '나레이션'  # 현재 캐릭터 (기본값: 나레이션)
+        has_any_character = False  # 대본에 캐릭터가 하나라도 있는지 확인
+
+        # 1차 패스: 캐릭터가 있는지 확인
+        for para in paragraphs:
+            para = para.strip()
+            if para:
+                match = character_pattern.match(para)
+                if match:
+                    has_any_character = True
+                    break
+
+        # 2차 패스: 실제 문장 분리
+        for para in paragraphs:
+            para = para.strip()
+            if para:  # 빈 줄 제외
+                # 캐릭터명 추출
+                match = character_pattern.match(para)
+                if match:
+                    character_name = match.group(1).strip()
+                    # '나레이터'를 '나레이션'으로 통일
+                    if character_name == '나레이터':
+                        character_name = '나레이션'
+                    text_content = match.group(2).strip()
+                    current_character = character_name  # 현재 캐릭터 업데이트
+                else:
+                    # 캐릭터명 표시가 없는 경우
+                    if has_any_character:
+                        # 대본에 캐릭터가 있으면 이전 캐릭터 유지
+                        character_name = current_character
+                    else:
+                        # 대본에 캐릭터가 없으면 나레이션
+                        character_name = '나레이션'
+                    text_content = para
+
+                # 각 문단을 문장 단위로 분리 (마침표, 물음표, 느낌표 기준)
+                para_sentences = smart_split_sentences(text_content)
+
+                # 분리된 모든 문장에 같은 캐릭터명 적용
+                for sentence in para_sentences:
+                    all_sentences.append(sentence)
+                    sentence_characters.append(character_name)
+
+        # 문장 객체 생성
+        sentences = []
+        detected_characters = set()  # 발견된 캐릭터명 수집
+
+        for idx, (text, character) in enumerate(zip(all_sentences, sentence_characters)):
+            # 앞뒤 따옴표 제거
+            text = text.strip()
+            if text.startswith('"') and text.endswith('"'):
+                text = text[1:-1].strip()
+            elif text.startswith('"') and text.endswith('"'):
+                text = text[1:-1].strip()
+
+            # 빈 문장 제외 (빈 따옴표 "" 제거됨)
+            if text:
+                sentences.append({
+                    'id': idx + 1,
+                    'text': text,
+                    'character': character,
+                    'startTime': None,  # 타임코드는 나중에 계산
+                    'endTime': None,
+                    'duration': None
+                })
+                detected_characters.add(character)
+
+        print(f"[RoyStudio] 대본 분석 완료: {len(sentences)}개 문장 클립 생성")
+        print(f"[RoyStudio] 클립당 평균 글자 수: {sum(len(s['text']) for s in sentences) / len(sentences):.1f}자")
+        print(f"[RoyStudio] 발견된 캐릭터: {', '.join(sorted(detected_characters))}")
+
+        return {
+            'success': True,
+            'sentences': sentences,
+            'detectedCharacters': sorted(list(detected_characters))
+        }
+
+    except Exception as e:
+        print(f"[ERROR] load_script_for_studio 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+@eel.expose
+def calculate_timecode_and_generate_mp3(generate_data):
+    """타임코드 계산 및 MP3 생성 (Whisper 기반)
+
+    1. 각 문장의 TTS 생성 (자연스러운 음성)
+    2. 모든 음성을 합쳐서 최종 MP3 생성
+    3. Whisper로 MP3 분석 → word-level timestamps 추출
+    4. 글자 수 제한으로 자막 클립 재분할
+    5. Word timestamps와 자막 클립 매칭 → SRT 생성
+    """
+    try:
+        import tempfile
+        import shutil
+        from pydub import AudioSegment
+
+        print("[RoyStudio] 타임코드 계산 및 MP3 생성 시작...")
+
+        sentences = generate_data.get('sentences', [])
+        characters = generate_data.get('characters', [])  # 캐릭터 정보
+        output_path = generate_data.get('outputPath', '')
+
+        if not sentences:
+            return {'success': False, 'error': '문장 데이터가 없습니다.'}
+
+        # 캐릭터 이름으로 빠르게 찾기 위한 딕셔너리 생성
+        character_map = {char['name']: char for char in characters}
+
+        # 임시 디렉토리 생성
+        temp_dir = tempfile.mkdtemp(prefix='roystudio_')
+        print(f"[RoyStudio] 임시 디렉토리: {temp_dir}")
+
+        try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            import time
+
+            SILENCE_DURATION_SEC = 0.15  # 문장 사이 침묵 시간 (초)
+            MAX_CONCURRENT_TTS = 5  # 동시 TTS 생성 수 (Google API 제한 고려)
+
+            # 1단계: 각 문장 TTS 생성 (병렬 처리)
+            print(f"[RoyStudio] 1단계: {len(sentences)}개 문장 TTS 생성 중... (동시 {MAX_CONCURRENT_TTS}개)")
+
+            # TTS 생성 작업 정의
+            def generate_single_tts(idx, sentence):
+                """단일 TTS 생성 작업"""
+                clip_text = sentence.get('text', '')
+                character_name = sentence.get('character', '나레이션')
+
+                if not clip_text:
+                    return idx, None, 0
+
+                # 해당 문장의 캐릭터 정보 가져오기
+                character = character_map.get(character_name)
+
+                if character:
+                    voice = character.get('voice', 'ko-KR-Wavenet-A')
+                    speed = character.get('speed', 1.0)
+                    pitch = character.get('pitch', 0.0)
+                    post_speed = character.get('postSpeed', 1.0)
+                else:
+                    voice = 'ko-KR-Wavenet-A'
+                    speed = 1.0
+                    pitch = 0.0
+                    post_speed = 1.0
+
+                is_chirp3_hd = 'Chirp3-HD' in voice
+
+                try:
+                    # TTS 생성
+                    if is_chirp3_hd:
+                        audio_bytes = services.synthesize_tts_bytes(
+                            profile_name='Google',
+                            text=clip_text,
+                            api_voice=voice,
+                            rate=1.0,
+                            pitch=0.0
+                        )
+                    else:
+                        audio_bytes = services.synthesize_tts_bytes(
+                            profile_name='Google',
+                            text=clip_text,
+                            api_voice=voice,
+                            rate=speed,
+                            pitch=pitch
+                        )
+
+                    if audio_bytes:
+                        # 임시 파일로 저장
+                        temp_audio_path = os.path.join(temp_dir, f'clip_{idx}.mp3')
+                        with open(temp_audio_path, 'wb') as f:
+                            f.write(audio_bytes)
+
+                        # Chirp3-HD 후처리 속도 변환
+                        if is_chirp3_hd and post_speed != 1.0:
+                            temp_audio_processed = os.path.join(temp_dir, f'clip_{idx}_speed.mp3')
+                            if apply_audio_speed_ffmpeg(temp_audio_path, temp_audio_processed, post_speed):
+                                temp_audio_path = temp_audio_processed
+
+                        # AudioSegment로 로드
+                        audio_segment = AudioSegment.from_mp3(temp_audio_path)
+                        clip_duration = len(audio_segment) / 1000.0
+
+                        return idx, audio_segment, clip_duration
+                    else:
+                        return idx, None, 0
+                except Exception as e:
+                    print(f"[RoyStudio] TTS 생성 오류 (클립 {idx}): {e}")
+                    return idx, None, 0
+
+            # 병렬 TTS 생성
+            audio_results = {}
+            completed_count = 0
+            total_count = len(sentences)
+
+            with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_TTS) as executor:
+                # 모든 작업 제출
+                futures = {
+                    executor.submit(generate_single_tts, idx, sentence): idx
+                    for idx, sentence in enumerate(sentences)
+                }
+
+                # 완료되는 순서대로 결과 수집
+                for future in as_completed(futures):
+                    idx, audio_segment, duration = future.result()
+                    completed_count += 1
+
+                    if audio_segment:
+                        audio_results[idx] = audio_segment
+                        print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 완료 ({duration:.2f}초)")
+                    else:
+                        print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 실패")
+
+                    # 진행률 업데이트 (프론트엔드로 전송)
+                    progress = int((completed_count / total_count) * 50)  # TTS 생성은 전체의 50%
+                    try:
+                        eel.updateProgress(progress, f'TTS 생성 중... ({completed_count}/{total_count})')
+                    except:
+                        pass  # eel 호출 실패 무시
+
+            # 순서대로 정렬하여 audio_segments 생성
+            audio_segments = []
+            for idx in range(len(sentences)):
+                if idx in audio_results:
+                    audio_segments.append(audio_results[idx])
+
+            if len(audio_segments) == 0:
+                return {'success': False, 'error': 'TTS 생성 실패: 생성된 음성이 없습니다.'}
+
+            print(f"[RoyStudio] TTS 생성 완료: {len(audio_segments)}개 성공")
+
+            # 진행률 업데이트
+            try:
+                eel.updateProgress(55, '음성 파일 병합 중...')
+            except:
+                pass
+
+            # 2단계: 모든 음성 합치기
+            print(f"[RoyStudio] 2단계: {len(audio_segments)}개 음성 파일 병합 중...")
+
+            if not audio_segments:
+                return {'success': False, 'error': '생성된 음성이 없습니다.'}
+
+            # 문장 사이 침묵(무음) 시간 (밀리초)
+            SILENCE_DURATION_MS = 150
+            silence = AudioSegment.silent(duration=SILENCE_DURATION_MS)
+
+            # 음성 파일 병합 (문장 사이에 침묵 추가)
+            final_audio = audio_segments[0]
+            for audio in audio_segments[1:]:
+                final_audio += silence
+                final_audio += audio
+
+            # 최종 MP3 저장
+            final_audio.export(output_path, format='mp3', bitrate='192k')
+            total_duration = len(final_audio) / 1000.0
+            print(f"[RoyStudio] MP3 생성 완료: {output_path} ({total_duration:.2f}초)")
+
+            # 진행률 업데이트
+            try:
+                eel.updateProgress(60, 'Whisper 음성 분석 중...')
+            except:
+                pass
+
+            # 3단계: Whisper로 MP3 분석 (word-level timestamps)
+            print(f"[RoyStudio] 3단계: Whisper로 MP3 분석 중...")
+
+            try:
+                import whisper
+                print("[RoyStudio]   Whisper 모델 로딩 중...")
+                whisper_model = whisper.load_model("tiny")  # tiny 모델 사용 (타임코드 추출용, 빠른 속도)
+
+                print("[RoyStudio]   음성 인식 중... (시간이 걸릴 수 있습니다)")
+                result = whisper_model.transcribe(
+                    output_path,
+                    language='ko',
+                    word_timestamps=True,
+                    verbose=False
+                )
+
+                segments = result.get('segments', [])
+                print(f"[RoyStudio]   ✓ {len(segments)}개 세그먼트 감지됨")
+
+                # Word-level timestamps 추출
+                all_words = []
+                for seg in segments:
+                    for word_info in seg.get('words', []):
+                        all_words.append({
+                            'word': word_info.get('word', '').strip(),
+                            'start': word_info.get('start', 0.0),
+                            'end': word_info.get('end', 0.0)
+                        })
+
+                print(f"[RoyStudio]   ✓ {len(all_words)}개 단어 타임스탬프 추출됨")
+
+            except ImportError:
+                print("[RoyStudio]   ⚠️ Whisper가 설치되지 않았습니다. 기본 타임코드 사용")
+                all_words = []
+            except Exception as e:
+                print(f"[RoyStudio]   ⚠️ Whisper 분석 실패: {e}. 기본 타임코드 사용")
+                all_words = []
+
+            # 진행률 업데이트
+            try:
+                eel.updateProgress(85, '자막 생성 중...')
+            except:
+                pass
+
+            # 4단계: 자막 클립 재분할 (글자 수 제한 30자)
+            print(f"[RoyStudio] 4단계: 자막 클립 재분할 중 (글자 수 제한 30자)...")
+
+            subtitle_clips = []
+            for sent in sentences:
+                text = sent.get('text', '')
+                character = sent.get('character', '나레이션')
+
+                # 30자 단위로 문장 분할 (쉼표, 공백 고려)
+                clips = split_text_for_subtitle(text, max_length=30)
+
+                for clip_text in clips:
+                    subtitle_clips.append({
+                        'text': clip_text,
+                        'character': character
+                    })
+
+            print(f"[RoyStudio]   ✓ {len(subtitle_clips)}개 자막 클립 생성됨")
+
+            # 5단계: Word timestamps와 자막 클립 매칭
+            print(f"[RoyStudio] 5단계: 타임코드 매칭 중...")
+
+            if all_words:
+                # Whisper 단어 타임스탬프를 자막 클립에 매칭
+                subtitle_clips = match_subtitle_with_word_timestamps(subtitle_clips, all_words)
+            else:
+                # Whisper 실패 시 균등 분배
+                time_per_clip = total_duration / len(subtitle_clips)
+                for idx, clip in enumerate(subtitle_clips):
+                    clip['startTime'] = format_time(idx * time_per_clip)
+                    clip['endTime'] = format_time((idx + 1) * time_per_clip)
+
+            # 6단계: SRT 자막 파일 생성
+            srt_path = output_path.replace('MP3_', '자막_').replace('.mp3', '.srt')
+            try:
+                generate_srt_file(subtitle_clips, srt_path)
+                print(f"[RoyStudio] SRT 자막 생성 완료: {srt_path}")
+            except Exception as e:
+                print(f"[RoyStudio] SRT 생성 오류: {e}")
+
+            # 진행률 업데이트 - 완료
+            try:
+                eel.updateProgress(100, '완료!')
+            except:
+                pass
+
+            print(f"[RoyStudio] 🎉 완료! 총 길이: {total_duration:.2f}초, 자막 클립: {len(subtitle_clips)}개")
+
+            return {
+                'success': True,
+                'sentences': subtitle_clips,  # 재분할된 자막 클립 반환
+                'totalDuration': total_duration,
+                'outputPath': output_path,
+                'srtPath': srt_path
+            }
+
+        finally:
+            # 임시 디렉토리 정리
+            try:
+                shutil.rmtree(temp_dir)
+                print(f"[RoyStudio] 임시 파일 정리 완료")
+            except Exception as e:
+                print(f"[RoyStudio] 임시 파일 정리 오류: {e}")
+
+    except Exception as e:
+        print(f"[ERROR] calculate_timecode_and_generate_mp3 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def format_time(seconds):
+    """초를 HH:MM:SS.mmm 형식으로 변환 (밀리초 포함)"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60  # 소수점 유지
+    return f"{h:02d}:{m:02d}:{s:06.3f}"
+
+
+def format_srt_time(seconds):
+    """초를 SRT 시간 형식으로 변환 (HH:MM:SS,mmm)"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+@eel.expose
+def select_mp3_file():
+    """MP3 파일 선택 다이얼로그"""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+
+        file_path = filedialog.askopenfilename(
+            title="MP3 파일 선택",
+            filetypes=[
+                ("MP3 파일", "*.mp3"),
+                ("오디오 파일", "*.mp3;*.wav;*.m4a"),
+                ("모든 파일", "*.*")
+            ]
+        )
+
+        root.destroy()
+        return file_path if file_path else None
+
+    except Exception as e:
+        print(f"[RoyStudio] MP3 파일 선택 오류: {e}")
+        return None
+
+
+@eel.expose
+def convert_mp3_to_srt(mp3_path):
+    """MP3 파일을 Whisper로 분석하여 SRT 자막 파일 생성
+
+    Args:
+        mp3_path: MP3 파일 경로
+
+    Returns:
+        {'success': bool, 'srtPath': str, 'srtFileName': str, 'segmentCount': int, 'duration': float}
+    """
+    try:
+        print(f"[RoyStudio] MP3 → SRT 변환 시작: {mp3_path}")
+
+        if not os.path.exists(mp3_path):
+            return {'success': False, 'error': '파일을 찾을 수 없습니다.'}
+
+        # 진행률 업데이트
+        try:
+            eel.updateProgress(10, 'Whisper 모델 로딩 중...')
+        except:
+            pass
+
+        # Whisper로 MP3 분석
+        import whisper
+        print("[RoyStudio] Whisper 모델 로딩 중...")
+        whisper_model = whisper.load_model("tiny")  # tiny 모델 (타임코드 추출용)
+
+        try:
+            eel.updateProgress(30, 'MP3 음성 인식 중...')
+        except:
+            pass
+
+        print("[RoyStudio] 음성 인식 중...")
+        result = whisper_model.transcribe(
+            mp3_path,
+            language='ko',
+            word_timestamps=True,
+            verbose=False
+        )
+
+        segments = result.get('segments', [])
+        print(f"[RoyStudio] {len(segments)}개 세그먼트 감지됨")
+
+        if not segments:
+            return {'success': False, 'error': '음성을 인식할 수 없습니다.'}
+
+        try:
+            eel.updateProgress(70, '자막 클립 생성 중...')
+        except:
+            pass
+
+        # 세그먼트를 자막 클립으로 변환 (30자 단위 분할)
+        subtitle_clips = []
+        for seg in segments:
+            seg_text = seg.get('text', '').strip()
+            seg_start = seg.get('start', 0)
+            seg_end = seg.get('end', 0)
+
+            if not seg_text:
+                continue
+
+            # 30자 단위로 분할
+            clips = split_text_for_subtitle(seg_text, max_length=30)
+
+            if len(clips) == 1:
+                # 분할 없이 그대로 사용
+                subtitle_clips.append({
+                    'text': seg_text,
+                    'startTime': format_srt_time(seg_start),
+                    'endTime': format_srt_time(seg_end)
+                })
+            else:
+                # 분할된 경우 시간도 비례 분배
+                seg_duration = seg_end - seg_start
+                total_chars = sum(len(c) for c in clips)
+                current_time = seg_start
+
+                for clip_text in clips:
+                    clip_ratio = len(clip_text) / total_chars if total_chars > 0 else 1
+                    clip_duration = seg_duration * clip_ratio
+                    clip_end = current_time + clip_duration
+
+                    subtitle_clips.append({
+                        'text': clip_text,
+                        'startTime': format_srt_time(current_time),
+                        'endTime': format_srt_time(clip_end)
+                    })
+                    current_time = clip_end
+
+        print(f"[RoyStudio] {len(subtitle_clips)}개 자막 클립 생성됨")
+
+        try:
+            eel.updateProgress(90, 'SRT 파일 저장 중...')
+        except:
+            pass
+
+        # SRT 파일 경로 (MP3와 같은 폴더, 같은 파일명)
+        srt_path = os.path.splitext(mp3_path)[0] + '.srt'
+
+        # SRT 파일 생성 (두 줄 포맷 적용)
+        srt_content = []
+        for idx, clip in enumerate(subtitle_clips):
+            formatted_text = format_subtitle_two_lines(clip['text'])
+            srt_entry = f"{idx + 1}\n{clip['startTime']} --> {clip['endTime']}\n{formatted_text}\n"
+            srt_content.append(srt_entry)
+
+        with open(srt_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(srt_content))
+
+        # 총 길이 계산
+        total_duration = segments[-1].get('end', 0) if segments else 0
+
+        try:
+            eel.updateProgress(100, '완료!')
+        except:
+            pass
+
+        print(f"[RoyStudio] SRT 생성 완료: {srt_path}")
+
+        return {
+            'success': True,
+            'srtPath': srt_path,
+            'srtFileName': os.path.basename(srt_path),
+            'segmentCount': len(subtitle_clips),
+            'duration': total_duration
+        }
+
+    except ImportError:
+        return {'success': False, 'error': 'Whisper가 설치되지 않았습니다.'}
+    except Exception as e:
+        print(f"[ERROR] MP3 → SRT 변환 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def generate_srt_file(sentences, output_path):
+    """SRT 자막 파일 생성
+
+    Args:
+        sentences: 문장 리스트 (각 문장은 startTime, endTime, text 포함)
+        output_path: SRT 파일 저장 경로
+    """
+    srt_content = []
+
+    for idx, sentence in enumerate(sentences):
+        # 시간 문자열을 초로 변환
+        start_time = sentence.get('startTime', '00:00:00')
+        end_time = sentence.get('endTime', '00:00:00')
+        text = sentence.get('text', '').strip()
+
+        if not text:
+            continue
+
+        # HH:MM:SS 형식을 초로 변환
+        start_seconds = time_to_seconds(start_time)
+        end_seconds = time_to_seconds(end_time)
+
+        # SRT 형식으로 변환
+        srt_start = format_srt_time(start_seconds)
+        srt_end = format_srt_time(end_seconds)
+
+        # 자막을 두 줄로 포맷팅 (30자를 15자씩 두 줄로)
+        formatted_text = format_subtitle_two_lines(text)
+
+        # SRT 엔트리 생성
+        srt_entry = f"{idx + 1}\n{srt_start} --> {srt_end}\n{formatted_text}\n"
+        srt_content.append(srt_entry)
+
+    # 파일 저장
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(srt_content))
+
+
+def time_to_seconds(time_str):
+    """HH:MM:SS 또는 HH:MM:SS.mmm 형식을 초로 변환"""
+    try:
+        parts = time_str.split(':')
+        if len(parts) == 3:
+            h, m, s = parts
+            return int(h) * 3600 + int(m) * 60 + float(s)
+        return 0.0
+    except:
+        return 0.0
+
+
+@eel.expose
+def generate_video_studio(generate_data):
+    """영상 탭에서 영상 생성 (MP3 + 검은 배경 + 자막)
+
+    Args:
+        generate_data: {
+            sentences: 문장 배열,
+            characters: 캐릭터 배열 (음성 설정 포함),
+            settings: 설정 (해상도, 출력폴더 등),
+            outputPath: 출력 파일 경로
+        }
+
+    Returns:
+        {'success': bool, 'error': str, 'outputPath': str}
+    """
+    try:
+        import tempfile
+        import shutil
+
+        print("[RoyStudio] 영상 생성 시작...")
+
+        sentences = generate_data.get('sentences', [])
+        characters = generate_data.get('characters', [])
+        settings = generate_data.get('settings', {})
+        output_path = generate_data.get('outputPath', '')
+
+        if not sentences:
+            return {'success': False, 'error': '문장 데이터가 없습니다.'}
+
+        if not output_path:
+            return {'success': False, 'error': '출력 경로가 지정되지 않았습니다.'}
+
+        # 캐릭터 맵 생성
+        character_map = {char['name']: char for char in characters}
+
+        # 출력 폴더 확인/생성
+        output_dir = os.path.dirname(output_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # 임시 MP3 경로
+        temp_dir = tempfile.mkdtemp(prefix='roystudio_video_')
+        temp_mp3_path = os.path.join(temp_dir, 'temp_audio.mp3')
+
+        try:
+            # 1단계: MP3 생성
+            print("[RoyStudio] 1단계: MP3 음성 생성 중...")
+            mp3_result = calculate_timecode_and_generate_mp3({
+                'sentences': sentences,
+                'characters': characters,
+                'outputPath': temp_mp3_path
+            })
+
+            if not mp3_result.get('success'):
+                return {'success': False, 'error': mp3_result.get('error', 'MP3 생성 실패')}
+
+            total_duration = mp3_result.get('totalDuration', 0)
+            subtitle_clips = mp3_result.get('sentences', [])  # 타임코드가 포함된 자막
+
+            print(f"[RoyStudio] MP3 생성 완료: {total_duration:.2f}초")
+
+            # 2단계: 검은 배경 영상 생성 + MP3 합성
+            print("[RoyStudio] 2단계: 영상 생성 중...")
+
+            # 해상도 설정
+            resolution = settings.get('resolution', '1920x1080')
+            width, height = map(int, resolution.split('x'))
+
+            # 인코더 선택
+            best_encoder = get_best_encoder()
+            encoder_preset = get_encoder_preset(best_encoder)
+
+            # FFmpeg 명령어 구성
+            cmd = [
+                'ffmpeg', '-y',
+                # 검은 배경 영상 입력
+                '-f', 'lavfi', '-i', f'color=c=black:s={width}x{height}:d={total_duration}:r=30',
+                # MP3 오디오 입력
+                '-i', temp_mp3_path,
+                # 인코더 설정
+                '-c:v', best_encoder,
+                '-c:a', 'aac', '-b:a', '192k',
+                # 시간 제한
+                '-t', str(total_duration),
+                # 출력 파일
+                output_path
+            ]
+
+            # 프리셋 추가 (해당하는 경우)
+            if encoder_preset:
+                cmd.insert(-1, '-preset')
+                cmd.insert(-1, encoder_preset)
+
+            print(f"[RoyStudio] FFmpeg 실행: {' '.join(cmd[:10])}...")
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10분 타임아웃
+            )
+
+            if result.returncode != 0:
+                print(f"[ERROR] FFmpeg 오류: {result.stderr}")
+                return {'success': False, 'error': f'영상 생성 실패: {result.stderr[:200]}'}
+
+            # 3단계: SRT 자막 파일 저장
+            srt_path = output_path.replace('.mp4', '.srt')
+            if subtitle_clips:
+                generate_srt_file(subtitle_clips, srt_path)
+                print(f"[RoyStudio] SRT 생성 완료: {srt_path}")
+
+            print(f"[RoyStudio] 영상 생성 완료: {output_path}")
+
+            return {
+                'success': True,
+                'outputPath': output_path,
+                'srtPath': srt_path,
+                'totalDuration': total_duration
+            }
+
+        finally:
+            # 임시 파일 정리
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                print(f"[RoyStudio] 임시 파일 정리 오류: {e}")
+
+    except Exception as e:
+        print(f"[ERROR] generate_video_studio 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
 
 @eel.expose
 def studio_open_folder(folder_path):
@@ -1219,7 +2935,7 @@ def _execute_video_production_thread(job_data, output_folder):
         # narration_settings 생성 (캐릭터별 음성 설정)
         narration_settings = {}
         for clip in clips_data:
-            char = clip.get('character', '나레이터')
+            char = clip.get('character', '나레이션')
             if char not in narration_settings:
                 narration_settings[char] = {
                     'voice': clip.get('voice', 'ko-KR-Wavenet-A'),
@@ -1235,7 +2951,7 @@ def _execute_video_production_thread(job_data, output_folder):
         clips = []
         for clip in clips_data:
             clips.append({
-                'character': clip.get('character', '나레이터'),
+                'character': clip.get('character', '나레이션'),
                 'text': clip.get('text', ''),
                 'is_ssml': clip.get('text', '').strip().lower().startswith('<speak>')
             })
@@ -1589,7 +3305,7 @@ def studio_start_batch_production(jobs_data, output_folder):
                             if script_text:
                                 # 대본 파싱: [캐릭터명] 패턴으로 파싱
                                 clips_for_mp3 = []
-                                current_character = '나레이터'
+                                current_character = '나레이션'
                                 current_lines = []
 
                                 for line in script_text.split('\n'):
@@ -1658,9 +3374,11 @@ def studio_start_batch_production(jobs_data, output_folder):
                                             start_time = current_time
                                             end_time = current_time + estimated_duration
 
+                                            # 두 줄 포맷 적용
+                                            formatted_text = format_subtitle_two_lines(text)
                                             srt_content += f"{idx + 1}\n"
                                             srt_content += f"{format_srt_time(start_time)} --> {format_srt_time(end_time)}\n"
-                                            srt_content += f"{text}\n\n"
+                                            srt_content += f"{formatted_text}\n\n"
 
                                             current_time = end_time
 
@@ -2708,7 +4426,7 @@ def studio_create_transparent_eq_batch(job_data, output_folder, app):
 
         # 대본 파싱 ([캐릭터명] 패턴)
         clips_data = []
-        current_character = '나레이터'
+        current_character = '나레이션'
         current_lines = []
 
         for line in script_text.split('\n'):
@@ -2919,12 +4637,12 @@ def studio_sync_timecode_with_whisper(clips_data, output_folder, script_base_nam
         print(f"[RoyStudio] MP3 저장 완료: {mp3_output_path} ({total_duration:.2f}초)")
 
         # 3단계: Whisper로 타임스탬프 추출
-        print("[RoyStudio] Whisper 분석 시작 (base 모델)...")
+        print("[RoyStudio] Whisper 분석 시작 (tiny 모델)...")
 
         try:
             import whisper
 
-            model = whisper.load_model("base")
+            model = whisper.load_model("tiny")  # tiny 모델 (타임코드 추출용)
             result = model.transcribe(
                 mp3_output_path,
                 language="ko",
@@ -3188,6 +4906,216 @@ def select_script_folder():
         print(f"[RoyStudio] 폴더 선택 오류: {e}")
         return {'success': False, 'error': str(e)}
 
+
+# ============================================
+# 배치 제작 함수들
+# ============================================
+
+@eel.expose
+def batch_select_multiple_files():
+    """배치 제작용 대본 파일 다중 선택 (경로 리스트 반환)"""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+
+        files = filedialog.askopenfilenames(
+            title="대본 파일 선택 (다중 선택 가능)",
+            filetypes=[
+                ("텍스트 파일", "*.txt"),
+                ("Word 문서", "*.docx"),
+                ("모든 파일", "*.*")
+            ]
+        )
+
+        root.destroy()
+
+        if files:
+            return list(files)  # 경로 리스트만 반환
+        return []
+    except Exception as e:
+        print(f"[BatchProduction] 파일 선택 오류: {e}")
+        return []
+
+
+@eel.expose
+def batch_process_script(params):
+    """배치 제작: 단일 대본 처리
+
+    Args:
+        params: {
+            scriptPath: 대본 파일 경로,
+            settings: 배치 설정 (출력 형식, 음성 설정 등)
+        }
+
+    Returns:
+        {'success': bool, 'sentenceCount': int, 'characterCount': int, ...}
+    """
+    try:
+        script_path = params.get('scriptPath')
+        settings = params.get('settings', {})
+
+        print(f"[BatchProduction] 대본 처리 시작: {script_path}")
+
+        # 1. 대본 파일 로드
+        if not os.path.exists(script_path):
+            return {'success': False, 'error': '파일을 찾을 수 없습니다.'}
+
+        with open(script_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # 2. 대본 분석 (캐릭터 추출)
+        analysis = analyze_script_content(content)
+        sentences = analysis.get('sentences', [])
+        characters = analysis.get('characters', [])
+
+        if not sentences:
+            return {'success': False, 'error': '대본에서 문장을 찾을 수 없습니다.'}
+
+        print(f"[BatchProduction] 분석 완료: {len(sentences)}문장, {len(characters)}캐릭터")
+
+        # 3. 캐릭터별 음성 설정 (기본값 또는 저장된 설정)
+        character_map = {}
+        default_voice = settings.get('defaultVoice', 'ko-KR-Wavenet-D')
+        default_speed = settings.get('defaultSpeed', 1.0)
+        default_pitch = settings.get('defaultPitch', 0)
+        default_post_speed = settings.get('defaultPostSpeed', 1.0)
+        apply_post_speed_all = settings.get('applyPostSpeedToAll', False)
+
+        for char_name in characters:
+            char_settings = {
+                'name': char_name,
+                'voice': default_voice,
+                'speed': default_speed,
+                'pitch': default_pitch
+            }
+
+            # Chirp3-HD 모델인 경우 후처리 속도 설정
+            if 'Chirp3-HD' in default_voice or apply_post_speed_all:
+                char_settings['postSpeed'] = default_post_speed
+            else:
+                char_settings['postSpeed'] = 1.0
+
+            character_map[char_name] = char_settings
+
+        # 4. 출력 경로 결정
+        output_location = settings.get('outputLocation', 'same')
+        custom_folder = settings.get('customFolder', '')
+
+        if output_location == 'custom' and custom_folder:
+            output_dir = custom_folder
+        else:
+            output_dir = os.path.dirname(script_path)
+
+        # 파일명 (확장자 제외)
+        base_name = os.path.splitext(os.path.basename(script_path))[0]
+
+        # 5. MP3 생성 (outputMP3 또는 outputVideo가 true인 경우)
+        output_mp3 = settings.get('outputMP3', True)
+        output_srt = settings.get('outputSRT', True)
+        output_video = settings.get('outputVideo', False)
+
+        result_data = {
+            'success': True,
+            'sentenceCount': len(sentences),
+            'characterCount': len(characters),
+            'outputs': []
+        }
+
+        if output_mp3 or output_video:
+            mp3_path = os.path.join(output_dir, f'MP3_{base_name}.mp3')
+
+            # 캐릭터 맵을 캐릭터 리스트로 변환 (calculate_timecode_and_generate_mp3 형식에 맞춤)
+            characters_list = list(character_map.values())
+
+            # TTS 생성 호출 (dict 파라미터로 전달)
+            tts_result = calculate_timecode_and_generate_mp3({
+                'sentences': sentences,
+                'characters': characters_list,
+                'outputPath': mp3_path
+            })
+
+            if tts_result.get('success'):
+                result_data['mp3Path'] = mp3_path
+                result_data['outputs'].append(mp3_path)
+                result_data['totalDuration'] = tts_result.get('totalDuration', 0)
+
+                if output_srt and tts_result.get('srtPath'):
+                    result_data['srtPath'] = tts_result.get('srtPath')
+                    result_data['outputs'].append(tts_result.get('srtPath'))
+
+                print(f"[BatchProduction] MP3 생성 완료: {mp3_path}")
+            else:
+                return {'success': False, 'error': tts_result.get('error', 'TTS 생성 실패')}
+
+        # 6. 영상 생성 (outputVideo가 true인 경우)
+        if output_video and result_data.get('mp3Path'):
+            video_path = os.path.join(output_dir, f'영상_{base_name}.mp4')
+            resolution = settings.get('resolution', '1920x1080')
+            background = settings.get('background', '')
+
+            # 영상 생성은 추후 구현
+            # video_result = generate_video_from_mp3(...)
+            print(f"[BatchProduction] 영상 생성은 추후 구현 예정")
+
+        print(f"[BatchProduction] 처리 완료: {script_path}")
+        return result_data
+
+    except Exception as e:
+        print(f"[BatchProduction] 처리 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def analyze_script_content(content):
+    """대본 내용 분석 (문장 및 캐릭터 추출)"""
+    sentences = []
+    characters = set()
+
+    lines = content.split('\n')
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # 캐릭터:대사 형식 파싱
+        if ':' in line:
+            parts = line.split(':', 1)
+            char_name = parts[0].strip()
+            text = parts[1].strip() if len(parts) > 1 else ''
+
+            # 캐릭터명이 너무 길면 대사로 간주
+            if len(char_name) <= 20 and text:
+                characters.add(char_name)
+                sentences.append({
+                    'character': char_name,
+                    'text': text
+                })
+            else:
+                # 일반 문장
+                sentences.append({
+                    'character': '나레이션',
+                    'text': line
+                })
+                characters.add('나레이션')
+        else:
+            # 캐릭터 없는 일반 문장
+            sentences.append({
+                'character': '나레이션',
+                'text': line
+            })
+            characters.add('나레이션')
+
+    return {
+        'sentences': sentences,
+        'characters': list(characters)
+    }
+
+
 @eel.expose
 def get_script_file_info(file_path):
     """대본 파일 정보 가져오기 (문장 수, 예상 길이)"""
@@ -3435,6 +5363,643 @@ def youtube_select_thumbnail():
             return {'success': True, 'file_path': file_path}
         return {'success': False, 'error': '파일 선택 취소'}
     except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
+# ========== 빠른 TTS 변환 API ==========
+
+@eel.expose
+def generate_quick_tts_eel(text, voice_name):
+    """
+    빠른 TTS 변환 - JavaScript에서 호출
+    Google Cloud TTS를 사용하여 텍스트를 음성으로 변환
+    """
+    try:
+        import tempfile
+        import requests
+        from pydub import AudioSegment
+
+        # API 키 가져오기
+        if not TTS_QUOTA_LOADED:
+            return {
+                'success': False,
+                'error': 'TTS Quota Manager가 로드되지 않았습니다.'
+            }
+
+        # 사용 가능한 API 키 자동 선택
+        key_info = quota.get_available_api_key(voice_name, len(text))
+        if not key_info:
+            return {
+                'success': False,
+                'error': 'Google TTS API 키가 설정되지 않았습니다. 상단 API 키 버튼에서 설정해주세요.'
+            }
+
+        api_key = key_info['api_key']  # 'key'가 아닌 'api_key'
+
+        # Google Cloud TTS API 호출
+        url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={api_key}"
+
+        # 요청 데이터
+        data = {
+            "input": {"text": text},
+            "voice": {
+                "languageCode": voice_name[:5],  # 'ko-KR'
+                "name": voice_name
+            },
+            "audioConfig": {
+                "audioEncoding": "MP3"
+            }
+        }
+
+        # API 요청
+        response = requests.post(url, json=data, timeout=30)
+
+        if response.status_code != 200:
+            error_msg = response.json().get('error', {}).get('message', 'Unknown error')
+            return {
+                'success': False,
+                'error': f'TTS API 오류: {error_msg}'
+            }
+
+        # 음성 데이터 추출
+        audio_content = response.json()['audioContent']
+
+        # Base64 디코딩
+        import base64
+        audio_bytes = base64.b64decode(audio_content)
+
+        # 임시 파일로 저장
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        temp_file.write(audio_bytes)
+        temp_file.close()
+
+        # 오디오 길이 계산
+        audio = AudioSegment.from_mp3(temp_file.name)
+        duration = len(audio) / 1000.0  # 밀리초를 초로 변환
+
+        print(f"[QuickTTS] TTS 생성 완료: {text[:30]}... ({duration:.2f}초)")
+
+        return {
+            'success': True,
+            'file_path': temp_file.name,
+            'duration': duration
+        }
+
+    except Exception as e:
+        print(f'[QuickTTS] TTS 생성 오류: {e}')
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+@eel.expose
+def combine_audio_files_only_eel(audio_segments, output_path):
+    """
+    빠른 변환 - 여러 오디오 파일을 하나의 MP3로 결합
+    """
+    try:
+        from pydub import AudioSegment
+
+        combined = AudioSegment.empty()
+
+        for segment in audio_segments:
+            audio = AudioSegment.from_mp3(segment['file'])
+            combined += audio
+
+            # 임시 파일 삭제
+            try:
+                os.unlink(segment['file'])
+            except:
+                pass
+
+        # MP3로 저장
+        combined.export(output_path, format='mp3', bitrate='192k')
+
+        print(f"[QuickTTS] MP3 결합 완료: {output_path}")
+
+        return {
+            'success': True,
+            'mp3_path': output_path
+        }
+
+    except Exception as e:
+        print(f'[QuickTTS] 오디오 결합 오류: {e}')
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+@eel.expose
+def combine_audio_and_generate_srt_eel(audio_segments, base_path):
+    """
+    빠른 변환 - 오디오 파일 결합 + SRT 자막 파일 생성
+    """
+    try:
+        from pydub import AudioSegment
+
+        # MP3 결합
+        combined = AudioSegment.empty()
+
+        for segment in audio_segments:
+            audio = AudioSegment.from_mp3(segment['file'])
+            combined += audio
+
+            # 임시 파일 삭제
+            try:
+                os.unlink(segment['file'])
+            except:
+                pass
+
+        mp3_path = base_path + '.mp3'
+        combined.export(mp3_path, format='mp3', bitrate='192k')
+
+        # SRT 생성
+        srt_path = base_path + '.srt'
+        with open(srt_path, 'w', encoding='utf-8') as f:
+            for idx, segment in enumerate(audio_segments, 1):
+                start_time = format_srt_time(segment['start'])
+                end_time = format_srt_time(segment['end'])
+
+                f.write(f'{idx}\n')
+                f.write(f'{start_time} --> {end_time}\n')
+                f.write(f'{segment["text"]}\n')
+                f.write('\n')
+
+        print(f"[QuickTTS] MP3/SRT 생성 완료: {mp3_path}, {srt_path}")
+
+        return {
+            'success': True,
+            'mp3_path': mp3_path,
+            'srt_path': srt_path
+        }
+
+    except Exception as e:
+        print(f'[QuickTTS] MP3/SRT 생성 오류: {e}')
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+def format_srt_time(seconds):
+    """
+    초를 SRT 시간 형식으로 변환 (HH:MM:SS,mmm)
+    """
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int((seconds % 1) * 1000)
+
+    return f'{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}'
+
+
+# ========== YouTube 채널 관리 ==========
+
+@eel.expose
+def youtube_get_my_channels(account_id=None):
+    """
+    현재 인증된 계정의 채널 목록 조회
+
+    Args:
+        account_id: 계정 ID (None이면 현재 계정)
+
+    Returns:
+        {
+            'success': bool,
+            'channels': [{'id': ..., 'title': ..., 'thumbnail': ..., ...}],
+            'selected_channel_id': str or None,
+            'error': str
+        }
+    """
+    try:
+        import auth
+        import youtube_api
+        import channel_context
+        import account_manager
+
+        # 계정 ID 결정
+        if not account_id:
+            current_account = account_manager.get_current_account()
+            if not current_account:
+                return {'success': False, 'error': '로그인된 계정이 없습니다.', 'channels': []}
+            account_id = current_account['id']
+
+        # 인증 확인
+        if not auth.is_authenticated(account_id):
+            return {'success': False, 'error': '인증이 필요합니다.', 'channels': []}
+
+        # YouTube API 서비스 생성
+        youtube = auth.get_authenticated_service(account_id)
+        if not youtube:
+            return {'success': False, 'error': 'YouTube API 연결 실패', 'channels': []}
+
+        # 채널 목록 조회
+        result = youtube_api.get_my_channels(youtube)
+
+        if result['success']:
+            # 채널 목록 저장
+            channel_context.save_account_channels(account_id, result['channels'])
+
+            # 현재 선택된 채널 ID 가져오기
+            selected_id = channel_context.get_selected_channel_id(account_id)
+
+            return {
+                'success': True,
+                'channels': result['channels'],
+                'selected_channel_id': selected_id
+            }
+        else:
+            return result
+
+    except Exception as e:
+        print(f"[YouTube] 채널 목록 조회 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e), 'channels': []}
+
+
+@eel.expose
+def youtube_select_channel(account_id, channel_id):
+    """
+    작업할 채널 선택
+
+    Args:
+        account_id: 계정 ID
+        channel_id: 채널 ID
+
+    Returns:
+        {'success': bool, 'channel': dict, 'error': str}
+    """
+    try:
+        import channel_context
+
+        result = channel_context.select_channel(account_id, channel_id)
+        return result
+
+    except Exception as e:
+        print(f"[YouTube] 채널 선택 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def youtube_get_selected_channel(account_id=None):
+    """
+    현재 선택된 채널 정보 조회
+
+    Args:
+        account_id: 계정 ID (None이면 현재 계정)
+
+    Returns:
+        dict or None: 선택된 채널 정보
+    """
+    try:
+        import channel_context
+        import account_manager
+
+        # 계정 ID 결정
+        if not account_id:
+            current_account = account_manager.get_current_account()
+            if not current_account:
+                return None
+            account_id = current_account['id']
+
+        channel = channel_context.get_selected_channel(account_id)
+        return channel
+
+    except Exception as e:
+        print(f"[YouTube] 선택된 채널 조회 오류: {e}")
+        traceback.print_exc()
+        return None
+
+
+@eel.expose
+def youtube_refresh_channels(account_id=None):
+    """
+    채널 목록 새로고침 (API에서 다시 조회)
+
+    Args:
+        account_id: 계정 ID (None이면 현재 계정)
+
+    Returns:
+        {'success': bool, 'channels': [...], 'error': str}
+    """
+    try:
+        return youtube_get_my_channels(account_id)
+
+    except Exception as e:
+        print(f"[YouTube] 채널 새로고침 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e), 'channels': []}
+
+
+# ========== 계정 관리 ==========
+
+@eel.expose
+def account_get_list():
+    """
+    등록된 계정 목록 반환
+    Returns: {'accounts': [...], 'current_account_id': str}
+    """
+    try:
+        import account_manager
+        return account_manager.load_accounts()
+    except Exception as e:
+        print(f"[Account] 계정 목록 로드 오류: {e}")
+        return {'accounts': [], 'current_account_id': None}
+
+
+@eel.expose
+def account_add_new():
+    """
+    새 OAuth 계정 추가 (로그인 플로우 시작)
+    Returns: {'success': bool, 'error': str}
+    """
+    try:
+        import auth
+        import account_manager
+
+        # 1. 먼저 임시 계정 ID 생성
+        account_id = account_manager.generate_account_id()
+
+        # 2. OAuth 로그인 시작 (account_id 전달)
+        account_info = auth.authenticate_with_account_id(account_id)
+
+        if account_info and account_info.get('success'):
+            # 3. 계정 정보 저장
+            user_info = account_info.get('user_info', {})
+            result = account_manager.add_account_with_id(
+                account_id=account_id,
+                name=user_info.get('name', 'Unknown'),
+                email=user_info.get('email', ''),
+                thumbnail=user_info.get('picture', '')
+            )
+
+            if result['success']:
+                # 4. 계정 선택
+                account_manager.set_current_account(account_id)
+                return {'success': True, 'account_id': account_id}
+            else:
+                return result
+        else:
+            return {'success': False, 'error': account_info.get('error', '로그인 실패')}
+
+    except Exception as e:
+        print(f"[Account] 계정 추가 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def account_select(account_id):
+    """
+    활성 계정 전환
+    Args:
+        account_id: 전환할 계정 ID
+    Returns: {'success': bool, 'error': str}
+    """
+    try:
+        import account_manager
+        import config
+
+        result = account_manager.set_current_account(account_id)
+
+        if result['success']:
+            # API 자격 증명 로드
+            creds = account_manager.load_account_api_credentials(account_id)
+            if creds:
+                config.set_current_credentials(
+                    creds.get('api_key', ''),
+                    creds.get('client_id', ''),
+                    creds.get('client_secret', '')
+                )
+
+        return result
+
+    except Exception as e:
+        print(f"[Account] 계정 전환 오류: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def account_remove(account_id):
+    """
+    계정 삭제
+    Args:
+        account_id: 삭제할 계정 ID
+    Returns: {'success': bool, 'error': str}
+    """
+    try:
+        import account_manager
+        import channel_context
+
+        # 계정 삭제
+        result = account_manager.remove_account(account_id)
+
+        if result['success']:
+            # 채널 컨텍스트도 삭제
+            channel_context.clear_account_channels(account_id)
+
+        return result
+
+    except Exception as e:
+        print(f"[Account] 계정 삭제 오류: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def oauth_save_credentials(client_id, client_secret):
+    """
+    OAuth 자격 증명 저장 (공통 또는 현재 계정용)
+    Args:
+        client_id: OAuth Client ID
+        client_secret: OAuth Client Secret
+    Returns: {'success': bool, 'error': str}
+    """
+    try:
+        import account_manager
+        import config
+
+        # 현재 계정이 있으면 계정별로 저장
+        current_account = account_manager.get_current_account()
+
+        if current_account:
+            account_id = current_account['id']
+            # 기존 API 키 유지
+            existing_creds = account_manager.load_account_api_credentials(account_id)
+            api_key = existing_creds.get('api_key', '') if existing_creds else ''
+
+            result = account_manager.save_account_api_credentials(
+                account_id, api_key, client_id, client_secret
+            )
+
+            if result['success']:
+                # 현재 세션에도 적용
+                config.set_current_credentials(api_key, client_id, client_secret)
+
+            return result
+        else:
+            # 계정이 없으면 현재 세션에만 적용 (임시)
+            config.set_current_credentials('', client_id, client_secret)
+            return {'success': True}
+
+    except Exception as e:
+        print(f"[OAuth] 자격 증명 저장 오류: {e}")
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def oauth_get_credentials():
+    """
+    현재 OAuth 자격 증명 조회
+    Returns: {'client_id': str, 'client_secret': str}
+    """
+    try:
+        import account_manager
+        import config
+
+        # 현재 계정의 자격 증명 반환
+        current_account = account_manager.get_current_account()
+
+        if current_account:
+            creds = account_manager.load_account_api_credentials(current_account['id'])
+            if creds:
+                return {
+                    'client_id': creds.get('client_id', ''),
+                    'client_secret': creds.get('client_secret', '')
+                }
+
+        # 현재 세션 값 반환
+        return {
+            'client_id': config.get_client_id() or '',
+            'client_secret': config.get_client_secret() or ''
+        }
+
+    except Exception as e:
+        print(f"[OAuth] 자격 증명 조회 오류: {e}")
+        return {'client_id': '', 'client_secret': ''}
+
+
+# ============================================================================
+# 앱 설정 관리
+# ============================================================================
+
+@eel.expose
+def get_app_settings():
+    """앱 설정 불러오기"""
+    try:
+        settings = studio_load_json_file(APP_SETTINGS_FILE)
+        if not settings:
+            # 기본값 반환
+            settings = {
+                'whisperModel': 'base',
+                'outputFolder': '',
+                'subtitleMaxLength': 30,
+                'silenceDuration': 0.3,
+                'theme': 'dark'
+            }
+        return settings
+    except Exception as e:
+        print(f"[Settings] 설정 로드 오류: {e}")
+        return {
+            'whisperModel': 'base',
+            'outputFolder': '',
+            'subtitleMaxLength': 30,
+            'silenceDuration': 0.3,
+            'theme': 'dark'
+        }
+
+
+@eel.expose
+def save_app_settings(settings):
+    """앱 설정 저장"""
+    try:
+        studio_save_json_file(APP_SETTINGS_FILE, settings)
+        print(f"[Settings] 설정 저장 완료: {APP_SETTINGS_FILE}")
+        return {'success': True}
+    except Exception as e:
+        print(f"[Settings] 설정 저장 오류: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+@eel.expose
+def get_oauth_config():
+    """OAuth 설정 불러오기"""
+    try:
+        import config
+
+        # 1. 먼저 런타임 메모리에서 확인
+        client_id = config.get_client_id()
+        client_secret = config.get_client_secret()
+
+        if client_id and client_secret:
+            return {
+                'client_id': client_id,
+                'client_secret': client_secret
+            }
+
+        # 2. 파일에서 읽기
+        oauth_file = os.path.join(DATA_DIR, 'oauth_config.json')
+        oauth_settings = studio_load_json_file(oauth_file)
+
+        if oauth_settings and oauth_settings.get('client_id') and oauth_settings.get('client_secret'):
+            # 파일에서 읽은 설정을 런타임에 설정
+            config.set_current_credentials(
+                api_key=config.get_api_key(),
+                client_id=oauth_settings['client_id'],
+                client_secret=oauth_settings['client_secret']
+            )
+            return {
+                'client_id': oauth_settings['client_id'],
+                'client_secret': oauth_settings['client_secret']
+            }
+
+        return None
+    except Exception as e:
+        print(f"[OAuth] 설정 로드 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+@eel.expose
+def save_oauth_config(client_id, client_secret):
+    """OAuth 설정 저장"""
+    try:
+        import config
+
+        # 런타임 설정 업데이트
+        config.set_current_credentials(
+            api_key=config.get_api_key(),  # 기존 API Key 유지
+            client_id=client_id,
+            client_secret=client_secret
+        )
+
+        # 파일에 저장 (계정 관리자를 통해)
+        import account_manager
+
+        # OAuth 설정을 계정별 설정으로 저장
+        # 기본 계정이 없으면 OAuth 설정만 저장
+        oauth_settings = {
+            'client_id': client_id,
+            'client_secret': client_secret
+        }
+
+        # OAuth 설정 파일에 저장
+        oauth_file = os.path.join(DATA_DIR, 'oauth_config.json')
+        studio_save_json_file(oauth_file, oauth_settings)
+
+        print(f"[OAuth] OAuth 설정 저장 완료")
+        return {'success': True}
+    except Exception as e:
+        print(f"[OAuth] 설정 저장 오류: {e}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'error': str(e)}
 
 

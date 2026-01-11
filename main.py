@@ -4470,7 +4470,13 @@ def select_file(extensions=None):
     """파일 선택 대화상자
 
     Args:
-        extensions: 허용할 확장자 리스트 (예: ['srt', 'txt'])
+        extensions: 확장자 리스트 또는 문자열
+            - 리스트: ['txt', 'docx']
+            - 문자열(파이프 구분): 'txt|docx'
+            - 문자열(필터 형식): '텍스트 파일 (*.txt)|Word 문서 (*.docx)'
+
+    Returns:
+        선택된 파일 경로 (문자열) 또는 None
     """
     try:
         import tkinter as tk
@@ -4480,12 +4486,32 @@ def select_file(extensions=None):
         root.withdraw()
         root.attributes('-topmost', True)
 
-        # 파일 타입 설정
+        # 확장자 처리
+        filetypes = []
+
         if extensions:
-            filetypes = [(f'{ext.upper()} 파일', f'*.{ext}') for ext in extensions]
-            filetypes.append(('모든 파일', '*.*'))
-        else:
-            filetypes = [('모든 파일', '*.*')]
+            if isinstance(extensions, str):
+                # 파이프로 구분된 필터 처리
+                filters = extensions.split('|')
+                for filter_str in filters:
+                    # '텍스트 파일 (*.txt)' 형식 파싱
+                    if '(' in filter_str and ')' in filter_str:
+                        name = filter_str.split('(')[0].strip()
+                        pattern = filter_str.split('(')[1].split(')')[0].strip()
+                        filetypes.append((name, pattern))
+                    else:
+                        # 단순 확장자인 경우
+                        ext = filter_str.strip()
+                        filetypes.append((f'{ext.upper()} 파일', f'*.{ext}'))
+
+            elif isinstance(extensions, list):
+                # 리스트 형식
+                for ext in extensions:
+                    if isinstance(ext, str):
+                        filetypes.append((f'{ext.upper()} 파일', f'*.{ext}'))
+
+        # 모든 파일 옵션 추가
+        filetypes.append(('모든 파일', '*.*'))
 
         file_path = filedialog.askopenfilename(
             title='파일 선택',
@@ -4497,10 +4523,13 @@ def select_file(extensions=None):
         if not file_path:
             return None
 
-        return {'path': file_path}
+        print(f"[RoyStudio] 파일 선택됨: {file_path}")
+        return file_path
 
     except Exception as e:
-        print(f"파일 선택 오류: {e}")
+        print(f"[ERROR] select_file 오류: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

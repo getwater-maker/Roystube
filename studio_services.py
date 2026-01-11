@@ -1400,7 +1400,7 @@ def _execute_single_video_job(app, job, is_batch=False):
             # 배치 모드: 대본 파일을 읽어서 [캐릭터명] 패턴으로 파싱
             script_text = utils.read_script_file(job['scriptPath'])
             clips = []
-            current_character = '나레이터'
+            current_character = '나레이션'
             current_lines = []
 
             for line in script_text.split('\n'):

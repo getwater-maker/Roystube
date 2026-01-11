@@ -897,3 +897,85 @@ def get_filtered_comments(youtube, video_id, keywords=None, max_count=20):
         result.extend(other_comments[:remaining])
 
     return result
+
+
+def get_my_channels(youtube):
+    """
+    현재 인증된 계정이 접근 가능한 모든 YouTube 채널 목록을 가져옵니다.
+    - 본인 소유 채널
+    - 관리자/편집자 권한을 받은 브랜드 채널
+
+    Args:
+        youtube: OAuth 인증된 YouTube API 서비스
+
+    Returns:
+        dict: {
+            'success': True/False,
+            'channels': [
+                {
+                    'id': 채널ID,
+                    'title': 채널명,
+                    'customUrl': 커스텀URL (@핸들),
+                    'thumbnail': 썸네일URL,
+                    'description': 설명,
+                    'subscriberCount': 구독자수,
+                    'videoCount': 영상수,
+                    'viewCount': 총조회수
+                }
+            ],
+            'error': 에러메시지 (실패시)
+        }
+    """
+    try:
+        # mine=True로 현재 인증된 사용자가 접근 가능한 모든 채널 조회
+        request = youtube.channels().list(
+            part='snippet,contentDetails,statistics',
+            mine=True,
+            maxResults=50  # 일반적으로 한 계정당 채널 수는 많지 않음
+        )
+        response = request.execute()
+
+        channels = []
+        for item in response.get('items', []):
+            channel_id = item['id']
+            snippet = item.get('snippet', {})
+            stats = item.get('statistics', {})
+
+            # 안전한 정수 변환
+            def safe_int(val):
+                try:
+                    return int(val) if val else 0
+                except (ValueError, TypeError):
+                    return 0
+
+            # 썸네일 URL
+            thumbnails = snippet.get('thumbnails', {})
+            thumbnail = (
+                thumbnails.get('medium', {}).get('url') or
+                thumbnails.get('default', {}).get('url') or
+                ''
+            )
+
+            channels.append({
+                'id': channel_id,
+                'title': snippet.get('title', ''),
+                'customUrl': snippet.get('customUrl', ''),
+                'thumbnail': thumbnail,
+                'description': snippet.get('description', '')[:200],  # 최대 200자
+                'subscriberCount': safe_int(stats.get('subscriberCount')),
+                'videoCount': safe_int(stats.get('videoCount')),
+                'viewCount': safe_int(stats.get('viewCount'))
+            })
+
+        return {
+            'success': True,
+            'channels': channels
+        }
+
+    except Exception as e:
+        print(f"채널 목록 조회 실패: {e}")
+        return {
+            'success': False,
+            'error': f'채널 목록 조회 실패: {str(e)}',
+            'channels': []
+        }

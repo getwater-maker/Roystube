@@ -7,12 +7,18 @@
 
 import os
 import json
-from data_path import DATA_DIR
+
+# Roystube 프로젝트의 data 폴더 사용
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
 # 계정 데이터 저장 경로
 ACCOUNTS_FILE = os.path.join(DATA_DIR, 'accounts.json')
 TOKENS_DIR = os.path.join(DATA_DIR, 'tokens')
 API_CREDENTIALS_DIR = os.path.join(DATA_DIR, 'api_credentials')
+
+# data 폴더가 없으면 생성
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
 
 def ensure_tokens_dir():
@@ -92,6 +98,48 @@ def generate_account_id():
     """
     import uuid
     return str(uuid.uuid4())[:8]
+
+
+def add_account_with_id(account_id, name, email, thumbnail=''):
+    """
+    지정된 ID로 새 계정을 추가합니다.
+
+    Args:
+        account_id: 계정 ID
+        name: 계정 이름 (채널명)
+        email: 이메일 또는 채널 ID
+        thumbnail: 프로필 이미지 URL
+
+    Returns:
+        dict: {'success': bool, 'account_id': str, 'error': str}
+    """
+    from datetime import datetime
+
+    try:
+        accounts_data = load_accounts()
+
+        # 계정 정보 추가
+        new_account = {
+            'id': account_id,
+            'name': name,
+            'email': email,
+            'thumbnail': thumbnail,
+            'created_at': datetime.now().isoformat()
+        }
+
+        accounts_data['accounts'].append(new_account)
+
+        # 첫 계정이면 현재 계정으로 설정
+        if len(accounts_data['accounts']) == 1:
+            accounts_data['current_account_id'] = account_id
+
+        if save_accounts(accounts_data):
+            return {'success': True, 'account_id': account_id}
+        else:
+            return {'success': False, 'error': '계정 저장 실패'}
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
 
 def add_account(name, email, thumbnail=''):
@@ -247,6 +295,28 @@ def switch_account(account_id):
 
     except Exception as e:
         return {'success': False, 'error': str(e)}
+
+
+def set_current_account(account_id):
+    """
+    현재 계정을 설정합니다.
+
+    Args:
+        account_id: 계정 ID
+
+    Returns:
+        bool: 성공 여부
+    """
+    accounts_data = load_accounts()
+
+    # 해당 계정이 존재하는지 확인
+    account_exists = any(acc['id'] == account_id for acc in accounts_data['accounts'])
+
+    if not account_exists:
+        return False
+
+    accounts_data['current_account_id'] = account_id
+    return save_accounts(accounts_data)
 
 
 def get_current_account():

@@ -23,7 +23,11 @@
       "Bash(gh:*)",
       "Bash(git remote add:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(del style.css)",
+      "Bash(del studio.css)",
+      "Bash(del:*)",
+      "Bash(grep:*)"
     ]
   }
 }

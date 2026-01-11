@@ -37,7 +37,7 @@ const logCollector = {
     // 전체 로그 포맷팅
     format: function() {
         const now = new Date().toLocaleString('ko-KR');
-        let output = '=== RoysCreator 로그 ===\n';
+        let output = '=== Roystube 로그 ===\n';
         output += `복사 시간: ${now}\n`;
         output += `로그 수: ${this.logs.length}개\n`;
         output += '========================\n\n';
@@ -124,7 +124,7 @@ async function copyAllLogs() {
     }
 }
 
-console.log('[RoysCreator] 로그 수집기 초기화 완료');
+console.log('[Roystube] 로그 수집기 초기화 완료');
 
 // ========== 전역 변수 ==========
 let studioCurrentTab = 'studio-production';
@@ -139,6 +139,8 @@ let studioCurrentScriptPath = null;
 let studioIsBlackscreenProcessing = false;
 let studioBlackscreenElapsedTimer = null;
 let studioBlackscreenStartTime = null;
+let studioBlackscreenPreviewTimer = null;
+let studioBlackscreenPreviewTime = 0;
 
 // 영상제작 경과 시간 타이머
 let studioProductionElapsedTimer = null;
@@ -170,7 +172,71 @@ function studioGetScriptBaseName() {
 // ========== 초기화 ==========
 document.addEventListener('DOMContentLoaded', () => {
     studioInitialize();
+    initTabSwitching();
 });
+
+// ========== 탭 전환 기능 ==========
+function initTabSwitching() {
+    // 모든 탭 버튼에 클릭 이벤트 리스너 추가
+    const tabButtons = document.querySelectorAll('.tab-btn');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+            if (targetTab) {
+                switchTab(targetTab);
+            }
+        });
+    });
+
+    // 초기 탭 표시 (active 클래스가 있는 탭 또는 첫 번째 탭)
+    const activeButton = document.querySelector('.tab-btn.active');
+    if (activeButton) {
+        const initialTab = activeButton.getAttribute('data-tab');
+        if (initialTab) {
+            switchTab(initialTab);
+        }
+    } else if (tabButtons.length > 0) {
+        const firstTab = tabButtons[0].getAttribute('data-tab');
+        if (firstTab) {
+            tabButtons[0].classList.add('active');
+            switchTab(firstTab);
+        }
+    }
+}
+
+function switchTab(tabName) {
+    // 모든 탭 숨기기
+    const allTabs = document.querySelectorAll('.tab-pane');
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.style.display = 'none';
+    });
+
+    // 모든 탭 버튼의 active 클래스 제거
+    const allButtons = document.querySelectorAll('.tab-btn');
+    allButtons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 선택된 탭 표시
+    const targetTab = document.getElementById(`tab-${tabName}`);
+    if (targetTab) {
+        targetTab.classList.add('active');
+        targetTab.style.display = 'block';
+    }
+
+    // 선택된 버튼에 active 클래스 추가
+    const targetButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
+
+    // 현재 탭 저장
+    studioCurrentTab = tabName;
+
+    console.log(`[RoyStudio] 탭 전환: ${tabName}`);
+}
 
 async function studioInitialize() {
     console.log('[RoyStudio] 초기화 시작...');
@@ -848,7 +914,7 @@ async function studioAnalyzeScript() {
         const lines = scriptText.split('\n').filter(line => line.trim());
         studioAnalyzedClips = [];
         let clipIndex = 1;
-        let currentCharacter = '나레이터';
+        let currentCharacter = '나레이션';
 
         for (const line of lines) {
             // [캐릭터명] 형식 체크
@@ -2193,11 +2259,14 @@ function studioUpdateBlackscreenFilename() {
 // 다운로드 폴더에 파일명 설정
 async function studioSetBlackscreenOutputPath(filename) {
     try {
+        const element = document.getElementById('studio-blackscreen-output');
+        if (!element) return; // 요소가 없으면 조기 종료
+
         const downloadPath = await eel.studio_get_downloads_folder()();
         if (downloadPath) {
             const separator = downloadPath.includes('\\') ? '\\' : '/';
             const fullPath = downloadPath + separator + filename;
-            document.getElementById('studio-blackscreen-output').value = fullPath;
+            element.value = fullPath;
         }
     } catch (error) {
         console.error('[RoyStudio] 파일 경로 설정 오류:', error);
@@ -3220,7 +3289,7 @@ async function designAnalyzeScript() {
         // TTS설정 탭과 동일한 로직 - 문장 단위로 분리
         const lines = content.split('\n').filter(line => line.trim());
         const clips = [];
-        let currentCharacter = '나레이터';
+        let currentCharacter = '나레이션';
 
         for (const line of lines) {
             const trimmed = line.trim();
@@ -4986,11 +5055,11 @@ function designAddSubtitle() {
         start: start,
         end: start + 2,
         text: '새 자막',
-        character: '나레이터'
+        character: '나레이션'
     });
 
     designAnalyzedClips.push({
-        character: '나레이터',
+        character: '나레이션',
         text: '새 자막'
     });
 
@@ -7704,7 +7773,7 @@ async function presetShowAPIUsage() {
 }
 
 // 캐릭터 음성 항목 추가
-function designAddPresetVoice(charName = '나레이터', voice = 'ko-KR-Wavenet-A', rate = 1.0, pitch = 0) {
+function designAddPresetVoice(charName = '나레이션', voice = 'ko-KR-Wavenet-A', rate = 1.0, pitch = 0) {
     const container = document.getElementById('preset-voices-container');
     if (!container) return;
 
@@ -8079,7 +8148,7 @@ async function batchExtractAllCharacters() {
                 console.log(`[Batch] 대본 라인 수: ${lines.length}`);
                 console.log(`[Batch] 첫 5줄:`, lines.slice(0, 5));
 
-                let currentCharacter = '나레이터';
+                let currentCharacter = '나레이션';
 
                 for (const line of lines) {
                     const trimmed = line.trim();
@@ -8297,22 +8366,50 @@ async function batchSelectItemBackground(itemId) {
 
 // 공통 배경 사용 토글
 function batchToggleCommonBg() {
-    const useCommon = document.getElementById('batch-use-common-bg').checked;
-    document.getElementById('batch-common-bg-row').style.display = useCommon ? 'flex' : 'none';
-    document.getElementById('batch-individual-bg-hint').style.display = useCommon ? 'none' : 'block';
+    const checkbox = document.getElementById('batch-use-common-bg');
+    if (!checkbox) return; // 요소가 없으면 무시
+
+    const useCommon = checkbox.checked;
+    const commonBgRow = document.getElementById('batch-common-bg-row');
+    const individualBgHint = document.getElementById('batch-individual-bg-hint');
+
+    if (commonBgRow) {
+        commonBgRow.style.display = useCommon ? 'flex' : 'none';
+    }
+    if (individualBgHint) {
+        individualBgHint.style.display = useCommon ? 'none' : 'block';
+    }
     updateBatchQueueUI();
+}
+
+// 공통 배경 이미지 선택
+async function batchSelectCommonBg() {
+    try {
+        const result = await eel.select_background_image()();
+        if (result && result.success && result.path) {
+            document.getElementById('batch-common-bg').value = result.path;
+        }
+    } catch (error) {
+        console.error('[Batch] 공통 배경 이미지 선택 오류:', error);
+    }
 }
 
 // EQ 토글
 function batchToggleEQ() {
-    const enabled = document.getElementById('batch-eq-enabled').checked;
-    document.getElementById('batch-eq-options').style.display = enabled ? 'block' : 'none';
+    const checkbox = document.getElementById('batch-eq-enabled');
+    const options = document.getElementById('batch-eq-options');
+    if (checkbox && options) {
+        options.style.display = checkbox.checked ? 'block' : 'none';
+    }
 }
 
 // 자막 토글
 function batchToggleSubtitle() {
-    const enabled = document.getElementById('batch-subtitle-enabled').checked;
-    document.getElementById('batch-subtitle-options').style.display = enabled ? 'block' : 'none';
+    const checkbox = document.getElementById('batch-subtitle-enabled');
+    const options = document.getElementById('batch-subtitle-options');
+    if (checkbox && options) {
+        options.style.display = checkbox.checked ? 'block' : 'none';
+    }
 }
 
 // 자동 출력 경로 토글
