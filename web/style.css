@@ -287,6 +287,17 @@ body {
     border-color: #dc2626;
 }
 
+.btn-warning {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    border-color: #d97706;
+}
+
 .btn-sm {
     padding: 4px var(--spacing-md);
     font-size: 12px;
@@ -1050,4 +1061,106 @@ textarea {
 
 #setting-channel-list > div:last-child {
     border-bottom: none;
+}
+
+/* ============================================
+   영상 미리보기 팝업
+   ============================================ */
+
+.video-preview-modal-content {
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+}
+
+.video-preview-body {
+    padding: 0 !important;
+}
+
+.video-preview-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+}
+
+.preview-background {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #1a1a2e;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.preview-subtitle {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 4px;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.preview-subtitle.visible {
+    opacity: 1;
+}
+
+.video-preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-primary);
+}
+
+.preview-progress-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.preview-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.preview-progress {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-primary);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}
+
+#preview-time {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 100px;
+    text-align: right;
+}
+
+.preview-clip-info {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    text-align: right;
 }

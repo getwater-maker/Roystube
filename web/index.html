@@ -351,8 +351,9 @@
 
                         <!-- 작업 로그 -->
                         <div class="design-section" style="flex: 1; min-height: 150px;">
-                            <div class="section-header-simple">
+                            <div class="section-header-simple" style="display: flex; justify-content: space-between; align-items: center;">
                                 <h3>📋 작업 로그</h3>
+                                <button class="btn-icon-sm" onclick="copyStudioLog()" title="로그 복사">📋</button>
                             </div>
                             <div class="log-container" id="studio-log">
                                 <div class="log-entry info">시스템 준비 완료</div>
@@ -366,8 +367,11 @@
                         <div class="design-section full-height">
                             <div class="section-header-simple">
                                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                    <h3>🎬 타임라인 & 문장 편집</h3>
+                                    <h3>🎬 타임라인 & 문장 편집 <span id="timeline-script-name" style="font-weight: normal; color: var(--text-secondary);"></span></h3>
                                     <div style="display: flex; gap: 8px;">
+                                        <button onclick="openVideoPreview()" class="btn" style="padding: var(--spacing-sm) var(--spacing-lg); font-size: 13px; font-weight: 600; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                            👁️ 미리보기
+                                        </button>
                                         <button onclick="convertMP3toSRT()" class="btn" style="padding: var(--spacing-sm) var(--spacing-lg); font-size: 13px; font-weight: 600; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                                             🎵 MP3 → SRT
                                         </button>
@@ -376,9 +380,12 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
                                     <button onclick="addSentence()" class="btn-sm btn-primary">+ 문장 추가</button>
                                     <button onclick="selectAllSentences()" class="btn-sm">전체 선택</button>
+                                    <button onclick="previewSelectedSentences()" class="btn-sm">선택 미리듣기</button>
+                                    <button onclick="autoSplitSelectedSentences()" class="btn-sm" title="선택한 클립 중 22자 초과 클립을 띄어쓰기 기준으로 자동 분리">선택 자동분리</button>
+                                    <button onclick="autoSplitAllOverLimit()" class="btn-sm btn-warning" title="모든 22자 초과 클립을 띄어쓰기 기준으로 자동 분리">전체 자동분리</button>
                                     <button onclick="deleteSelectedSentences()" class="btn-sm btn-danger">선택 삭제</button>
                                 </div>
                             </div>
@@ -1423,6 +1430,43 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeAllCharactersModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 영상 미리보기 팝업 -->
+    <div id="video-preview-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content video-preview-modal-content">
+            <div class="modal-header">
+                <h3>🎬 영상 미리보기</h3>
+                <button class="modal-close" onclick="closePreviewPopup()">&times;</button>
+            </div>
+            <div class="modal-body video-preview-body">
+                <div class="video-preview-container">
+                    <!-- 배경 영역 -->
+                    <div id="preview-background" class="preview-background">
+                        <!-- 자막 영역 -->
+                        <div id="preview-subtitle" class="preview-subtitle"></div>
+                    </div>
+                    <!-- 오디오 플레이어 (숨김) -->
+                    <audio id="preview-audio" style="display: none;"></audio>
+                </div>
+                <!-- 컨트롤 바 -->
+                <div class="video-preview-controls">
+                    <button id="preview-play-btn" class="btn btn-primary" onclick="togglePreviewPlay()">▶ 재생</button>
+                    <div class="preview-progress-container">
+                        <div id="preview-progress-bar" class="preview-progress-bar">
+                            <div id="preview-progress" class="preview-progress"></div>
+                        </div>
+                        <span id="preview-time">00:00 / 00:00</span>
+                    </div>
+                    <div class="preview-clip-info">
+                        <span id="preview-clip-number">클립: 0/0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closePreviewPopup()">닫기</button>
             </div>
         </div>
     </div>

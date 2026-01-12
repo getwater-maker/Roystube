@@ -36,7 +36,7 @@ class BackendLogCollector:
 # 전역 로그 수집기 인스턴스
 backend_log_collector = BackendLogCollector()
 
-# print 함수 오버라이드하여 로그 수집
+# print 함수 오버라이드하여 로그 수집 및 프론트엔드 전송
 _original_print = print
 def print(*args, **kwargs):
     message = ' '.join(str(arg) for arg in args)
@@ -51,6 +51,15 @@ def print(*args, **kwargs):
 
     backend_log_collector.add(message, log_type)
     _original_print(*args, **kwargs)
+
+    # 프론트엔드로 모든 로그 전송
+    try:
+        # [RoyStudio] 접두사 제거
+        clean_message = message.replace("[RoyStudio] ", "")
+        frontend_type = "error" if log_type == "ERROR" else ("warning" if log_type == "WARN" else "info")
+        eel.receiveBackendLog(clean_message, frontend_type)()
+    except Exception:
+        pass  # 프론트엔드 연결 안됨
 
 @eel.expose
 def get_backend_logs():
@@ -209,6 +218,7 @@ def apply_audio_speed_ffmpeg(input_path, output_path, speed):
 
         cmd = [
             'ffmpeg', '-y',
+            '-hide_banner', '-loglevel', 'error',
             '-i', input_path,
             '-filter:a', atempo_filter,
             '-vn',  # 비디오 스트림 제외
@@ -220,8 +230,9 @@ def apply_audio_speed_ffmpeg(input_path, output_path, speed):
         result = subprocess.run(
             cmd,
             capture_output=True,
-            text=True,
-            timeout=120
+            timeout=60,
+            encoding='utf-8',
+            errors='replace'
         )
 
         if result.returncode == 0:
@@ -2229,7 +2240,7 @@ def calculate_timecode_and_generate_mp3(generate_data):
             import time
 
             SILENCE_DURATION_SEC = 0.15  # 문장 사이 침묵 시간 (초)
-            MAX_CONCURRENT_TTS = 5  # 동시 TTS 생성 수 (Google API 제한 고려)
+            MAX_CONCURRENT_TTS = 1  # 동시 TTS 생성 수 (1개씩 순차 처리)
 
             # 1단계: 각 문장 TTS 생성 (병렬 처리)
             print(f"[RoyStudio] 1단계: {len(sentences)}개 문장 TTS 생성 중... (동시 {MAX_CONCURRENT_TTS}개)")
@@ -2261,9 +2272,13 @@ def calculate_timecode_and_generate_mp3(generate_data):
 
                 try:
                     # TTS 생성
+                    # 실제 프로필 이름 사용 (미리듣기와 동일하게)
+                    actual_profile = studio_get_profiles()[0] if studio_get_profiles() else 'Google'
+                    print(f"[RoyStudio] 클립 {idx+1} TTS 요청 중... ({voice}, {len(clip_text)}자, 프로필: {actual_profile})")
+                    
                     if is_chirp3_hd:
                         audio_bytes = services.synthesize_tts_bytes(
-                            profile_name='Google',
+                            profile_name=actual_profile,
                             text=clip_text,
                             api_voice=voice,
                             rate=1.0,
@@ -2271,12 +2286,14 @@ def calculate_timecode_and_generate_mp3(generate_data):
                         )
                     else:
                         audio_bytes = services.synthesize_tts_bytes(
-                            profile_name='Google',
+                            profile_name=actual_profile,
                             text=clip_text,
                             api_voice=voice,
                             rate=speed,
                             pitch=pitch
                         )
+
+                    print(f"[RoyStudio] 클립 {idx+1} TTS 응답 받음 ({len(audio_bytes) if audio_bytes else 0} bytes)")
 
                     if audio_bytes:
                         # 임시 파일로 저장
@@ -2301,35 +2318,27 @@ def calculate_timecode_and_generate_mp3(generate_data):
                     print(f"[RoyStudio] TTS 생성 오류 (클립 {idx}): {e}")
                     return idx, None, 0
 
-            # 병렬 TTS 생성
+            # 순차 TTS 생성 (ThreadPoolExecutor 제거 - 속도 테스트)
             audio_results = {}
             completed_count = 0
             total_count = len(sentences)
 
-            with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_TTS) as executor:
-                # 모든 작업 제출
-                futures = {
-                    executor.submit(generate_single_tts, idx, sentence): idx
-                    for idx, sentence in enumerate(sentences)
-                }
+            for idx, sentence in enumerate(sentences):
+                idx, audio_segment, duration = generate_single_tts(idx, sentence)
+                completed_count += 1
 
-                # 완료되는 순서대로 결과 수집
-                for future in as_completed(futures):
-                    idx, audio_segment, duration = future.result()
-                    completed_count += 1
+                if audio_segment:
+                    audio_results[idx] = audio_segment
+                    print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 완료 ({duration:.2f}초)")
+                else:
+                    print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 실패")
 
-                    if audio_segment:
-                        audio_results[idx] = audio_segment
-                        print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 완료 ({duration:.2f}초)")
-                    else:
-                        print(f"[RoyStudio] [{completed_count}/{total_count}] 클립 {idx+1} 실패")
-
-                    # 진행률 업데이트 (프론트엔드로 전송)
-                    progress = int((completed_count / total_count) * 50)  # TTS 생성은 전체의 50%
-                    try:
-                        eel.updateProgress(progress, f'TTS 생성 중... ({completed_count}/{total_count})')
-                    except:
-                        pass  # eel 호출 실패 무시
+                # 진행률 업데이트 (프론트엔드로 전송)
+                progress = int((completed_count / total_count) * 50)  # TTS 생성은 전체의 50%
+                try:
+                    eel.updateProgress(progress, f'TTS 생성 중... ({completed_count}/{total_count})')
+                except:
+                    pass  # eel 호출 실패 무시
 
             # 순서대로 정렬하여 audio_segments 생성
             audio_segments = []
@@ -2348,7 +2357,7 @@ def calculate_timecode_and_generate_mp3(generate_data):
             except:
                 pass
 
-            # 2단계: 모든 음성 합치기
+            # 2단계: 모든 음성 합치기 + 정확한 타임코드 계산
             print(f"[RoyStudio] 2단계: {len(audio_segments)}개 음성 파일 병합 중...")
 
             if not audio_segments:
@@ -2358,96 +2367,73 @@ def calculate_timecode_and_generate_mp3(generate_data):
             SILENCE_DURATION_MS = 150
             silence = AudioSegment.silent(duration=SILENCE_DURATION_MS)
 
-            # 음성 파일 병합 (문장 사이에 침묵 추가)
+            # 음성 파일 병합 + 각 문장의 실제 타임코드 계산
             final_audio = audio_segments[0]
+            sentence_timecodes = []  # 각 문장의 (시작, 끝) 시간
+
+            current_time = 0.0
+            first_duration = len(audio_segments[0]) / 1000.0
+            sentence_timecodes.append((current_time, first_duration))
+            current_time = first_duration
+
             for audio in audio_segments[1:]:
                 final_audio += silence
+                current_time += SILENCE_DURATION_MS / 1000.0  # 침묵 시간 추가
+
                 final_audio += audio
+                audio_duration = len(audio) / 1000.0
+                sentence_timecodes.append((current_time, current_time + audio_duration))
+                current_time += audio_duration
 
             # 최종 MP3 저장
             final_audio.export(output_path, format='mp3', bitrate='192k')
             total_duration = len(final_audio) / 1000.0
             print(f"[RoyStudio] MP3 생성 완료: {output_path} ({total_duration:.2f}초)")
 
-            # 진행률 업데이트
-            try:
-                eel.updateProgress(60, 'Whisper 음성 분석 중...')
-            except:
-                pass
+            # 원본 문장에 실제 타임코드 적용
+            for idx, (start, end) in enumerate(sentence_timecodes):
+                if idx < len(sentences):
+                    sentences[idx]['_actual_start'] = start
+                    sentences[idx]['_actual_end'] = end
 
-            # 3단계: Whisper로 MP3 분석 (word-level timestamps)
-            print(f"[RoyStudio] 3단계: Whisper로 MP3 분석 중...")
-
-            try:
-                import whisper
-                print("[RoyStudio]   Whisper 모델 로딩 중...")
-                whisper_model = whisper.load_model("tiny")  # tiny 모델 사용 (타임코드 추출용, 빠른 속도)
-
-                print("[RoyStudio]   음성 인식 중... (시간이 걸릴 수 있습니다)")
-                result = whisper_model.transcribe(
-                    output_path,
-                    language='ko',
-                    word_timestamps=True,
-                    verbose=False
-                )
-
-                segments = result.get('segments', [])
-                print(f"[RoyStudio]   ✓ {len(segments)}개 세그먼트 감지됨")
-
-                # Word-level timestamps 추출
-                all_words = []
-                for seg in segments:
-                    for word_info in seg.get('words', []):
-                        all_words.append({
-                            'word': word_info.get('word', '').strip(),
-                            'start': word_info.get('start', 0.0),
-                            'end': word_info.get('end', 0.0)
-                        })
-
-                print(f"[RoyStudio]   ✓ {len(all_words)}개 단어 타임스탬프 추출됨")
-
-            except ImportError:
-                print("[RoyStudio]   ⚠️ Whisper가 설치되지 않았습니다. 기본 타임코드 사용")
-                all_words = []
-            except Exception as e:
-                print(f"[RoyStudio]   ⚠️ Whisper 분석 실패: {e}. 기본 타임코드 사용")
-                all_words = []
+            print(f"[RoyStudio] 실제 타임코드 계산 완료: {len(sentence_timecodes)}개 문장")
 
             # 진행률 업데이트
             try:
-                eel.updateProgress(85, '자막 생성 중...')
+                eel.updateProgress(80, '자막 생성 중...')
             except:
                 pass
 
-            # 4단계: 자막 클립 재분할 (글자 수 제한 30자)
-            print(f"[RoyStudio] 4단계: 자막 클립 재분할 중 (글자 수 제한 30자)...")
+            # Whisper 분석 제거 - TTS 실제 길이 기반 타임코드 사용 (더 정확함)
+            print(f"[RoyStudio] 3단계: TTS 실제 길이 기반 타임코드 사용 (Whisper 불필요)")
+
+            # 4단계: 문장 단위 자막 생성 (분할 없음 - 정확한 싱크)
+            print(f"[RoyStudio] 4단계: 자막 클립 생성 중 (문장 단위)...")
 
             subtitle_clips = []
-            for sent in sentences:
+            for idx, sent in enumerate(sentences):
                 text = sent.get('text', '')
                 character = sent.get('character', '나레이션')
+                actual_start = sent.get('_actual_start', 0)
+                actual_end = sent.get('_actual_end', 0)
 
-                # 30자 단위로 문장 분할 (쉼표, 공백 고려)
-                clips = split_text_for_subtitle(text, max_length=30)
-
-                for clip_text in clips:
+                if text:
                     subtitle_clips.append({
-                        'text': clip_text,
-                        'character': character
+                        'text': text,
+                        'character': character,
+                        'startTime': format_time(actual_start),
+                        'endTime': format_time(actual_end)
                     })
 
-            print(f"[RoyStudio]   ✓ {len(subtitle_clips)}개 자막 클립 생성됨")
+            print(f"[RoyStudio]   ✓ {len(subtitle_clips)}개 자막 클립 생성됨 (문장 단위)")
 
-            # 5단계: Word timestamps와 자막 클립 매칭
-            print(f"[RoyStudio] 5단계: 타임코드 매칭 중...")
+            # 5단계: 타임코드 검증
+            print(f"[RoyStudio] 5단계: 타임코드 검증 중...")
 
-            if all_words:
-                # Whisper 단어 타임스탬프를 자막 클립에 매칭
-                subtitle_clips = match_subtitle_with_word_timestamps(subtitle_clips, all_words)
-            else:
-                # Whisper 실패 시 균등 분배
-                time_per_clip = total_duration / len(subtitle_clips)
-                for idx, clip in enumerate(subtitle_clips):
+            # 타임코드가 없는 클립 처리 (폴백)
+            for idx, clip in enumerate(subtitle_clips):
+                if 'startTime' not in clip or 'endTime' not in clip:
+                    time_per_clip = total_duration / len(subtitle_clips)
                     clip['startTime'] = format_time(idx * time_per_clip)
                     clip['endTime'] = format_time((idx + 1) * time_per_clip)
 
@@ -2780,32 +2766,60 @@ def generate_video_studio(generate_data):
 
             print(f"[RoyStudio] MP3 생성 완료: {total_duration:.2f}초")
 
-            # 2단계: 검은 배경 영상 생성 + MP3 합성
+            # 2단계: 배경 영상 생성 + MP3 합성
             print("[RoyStudio] 2단계: 영상 생성 중...")
 
             # 해상도 설정
             resolution = settings.get('resolution', '1920x1080')
             width, height = map(int, resolution.split('x'))
 
+            # 배경 이미지 경로
+            bg_path = settings.get('bgPath', '')
+
             # 인코더 선택
             best_encoder = get_best_encoder()
             encoder_preset = get_encoder_preset(best_encoder)
 
             # FFmpeg 명령어 구성
-            cmd = [
-                'ffmpeg', '-y',
-                # 검은 배경 영상 입력
-                '-f', 'lavfi', '-i', f'color=c=black:s={width}x{height}:d={total_duration}:r=30',
-                # MP3 오디오 입력
-                '-i', temp_mp3_path,
-                # 인코더 설정
-                '-c:v', best_encoder,
-                '-c:a', 'aac', '-b:a', '192k',
-                # 시간 제한
-                '-t', str(total_duration),
-                # 출력 파일
-                output_path
-            ]
+            if bg_path and os.path.exists(bg_path):
+                # 배경 이미지가 있는 경우: 이미지를 영상 길이만큼 루프
+                print(f"[RoyStudio] 배경 이미지 사용: {bg_path}")
+                cmd = [
+                    'ffmpeg', '-y',
+                    # 배경 이미지를 영상으로 변환 (loop)
+                    '-loop', '1',
+                    '-i', bg_path,
+                    # MP3 오디오 입력
+                    '-i', temp_mp3_path,
+                    # 비디오 필터: 해상도 조정 및 FPS 설정
+                    '-vf', f'scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,fps=30',
+                    # 인코더 설정
+                    '-c:v', best_encoder,
+                    '-c:a', 'aac', '-b:a', '192k',
+                    # 오디오 길이에 맞춤 (shortest)
+                    '-shortest',
+                    # 시간 제한
+                    '-t', str(total_duration),
+                    # 출력 파일
+                    output_path
+                ]
+            else:
+                # 배경 이미지가 없는 경우: 검은 배경
+                print("[RoyStudio] 검은 배경 사용 (배경 이미지 없음)")
+                cmd = [
+                    'ffmpeg', '-y',
+                    # 검은 배경 영상 입력
+                    '-f', 'lavfi', '-i', f'color=c=black:s={width}x{height}:d={total_duration}:r=30',
+                    # MP3 오디오 입력
+                    '-i', temp_mp3_path,
+                    # 인코더 설정
+                    '-c:v', best_encoder,
+                    '-c:a', 'aac', '-b:a', '192k',
+                    # 시간 제한
+                    '-t', str(total_duration),
+                    # 출력 파일
+                    output_path
+                ]
 
             # 프리셋 추가 (해당하는 경우)
             if encoder_preset:
@@ -2817,8 +2831,9 @@ def generate_video_studio(generate_data):
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
-                timeout=600  # 10분 타임아웃
+                timeout=600,  # 10분 타임아웃
+                encoding='utf-8',
+                errors='replace'  # 디코딩 오류 시 대체 문자 사용
             )
 
             if result.returncode != 0:
@@ -4982,7 +4997,7 @@ def batch_process_script(params):
         default_voice = settings.get('defaultVoice', 'ko-KR-Wavenet-D')
         default_speed = settings.get('defaultSpeed', 1.0)
         default_pitch = settings.get('defaultPitch', 0)
-        default_post_speed = settings.get('defaultPostSpeed', 1.0)
+        default_post_speed = settings.get('defaultPostSpeed', 0.90)
         apply_post_speed_all = settings.get('applyPostSpeedToAll', False)
 
         for char_name in characters:
@@ -6002,5 +6017,232 @@ def save_oauth_config(client_id, client_secret):
         traceback.print_exc()
         return {'success': False, 'error': str(e)}
 
+
+# ========== 형태소 기반 스마트 자막 분리 ==========
+_kiwi_instance = None
+
+def get_kiwi():
+    """Kiwi 형태소 분석기 인스턴스 반환 (싱글톤)"""
+    global _kiwi_instance
+    if _kiwi_instance is None:
+        try:
+            from kiwipiepy import Kiwi
+            _kiwi_instance = Kiwi()
+            print("[RoyStudio] Kiwi 형태소 분석기 초기화 완료")
+        except ImportError:
+            print("[RoyStudio] Kiwi 미설치 - pip install kiwipiepy 필요")
+            return None
+        except Exception as e:
+            print(f"[RoyStudio] Kiwi 초기화 오류: {e}")
+            return None
+    return _kiwi_instance
+
+def smart_split_sentence(text, max_length=22):
+    """
+    형태소 분석 기반 스마트 문장 분리
+    - 단어 중간에서 절대 자르지 않음
+    - 관형어+명사, 부사+용언 등 의미 단위 유지
+    - 22자 이내에서 최적의 분리점 찾기
+    - 원본 텍스트 완벽 보존 (형태소 원형이 아닌 원본 사용)
+    """
+    kiwi = get_kiwi()
+
+    if kiwi is None:
+        return fallback_split(text, max_length)
+
+    text = text.strip()
+    if len(text) <= max_length:
+        return [text]
+
+    try:
+        tokens = kiwi.tokenize(text)
+    except Exception as e:
+        print(f"[RoyStudio] 형태소 분석 오류: {e}")
+        return fallback_split(text, max_length)
+
+    if not tokens:
+        return fallback_split(text, max_length)
+
+    # 어절(띄어쓰기 단위) 경계 찾기
+    # 토큰의 위치 정보를 사용하여 원본 텍스트에서 어절 추출
+    word_boundaries = []  # [(start, end), ...]
+
+    prev_end = 0
+    word_start = 0
+
+    for i, token in enumerate(tokens):
+        token_start = token.start
+
+        # 이전 토큰과 현재 토큰 사이에 공백이 있으면 어절 경계
+        if i > 0 and token_start > prev_end:
+            # 이전 어절 종료
+            word_boundaries.append((word_start, prev_end))
+            word_start = token_start
+
+        prev_end = token.start + len(token.form)
+
+    # 마지막 어절
+    if prev_end > word_start:
+        word_boundaries.append((word_start, prev_end))
+
+    # 원본 텍스트에서 어절 추출
+    words = [text[start:end] for start, end in word_boundaries]
+
+    # 어절 단위로 분리
+    result = []
+    current_line = ""
+
+    for word in words:
+        separator = " " if current_line else ""
+        test_line = current_line + separator + word
+
+        if len(test_line) <= max_length:
+            current_line = test_line
+        else:
+            if current_line:
+                result.append(current_line)
+            current_line = word
+
+            # 단어 자체가 max_length보다 길면 그냥 추가
+            if len(word) > max_length:
+                result.append(current_line)
+                current_line = ""
+
+    if current_line:
+        result.append(current_line)
+
+    return result if result else [text]
+
+def fallback_split(text, max_length=22):
+    """띄어쓰기 기반 폴백 분리"""
+    result = []
+    remaining = text.strip()
+
+    while len(remaining) > max_length:
+        # max_length 이내에서 마지막 공백 찾기
+        split_index = -1
+        for i in range(min(max_length, len(remaining)), 0, -1):
+            if remaining[i-1] == ' ':
+                split_index = i - 1
+                break
+
+        if split_index == -1:
+            # 공백 없으면 max_length 이후 첫 공백
+            split_index = remaining.find(' ', max_length)
+            if split_index == -1:
+                result.append(remaining)
+                remaining = ''
+                break
+
+        result.append(remaining[:split_index].strip())
+        remaining = remaining[split_index:].strip()
+
+    if remaining:
+        result.append(remaining)
+
+    return result if result else [text]
+
+@eel.expose
+def smart_split_text_api(text, max_length=22):
+    """
+    프론트엔드용 스마트 분리 API
+
+    Args:
+        text: 분리할 텍스트
+        max_length: 최대 글자 수 (기본 22)
+
+    Returns:
+        {'success': True, 'parts': [...], 'method': 'kiwi'|'fallback'}
+    """
+    try:
+        kiwi = get_kiwi()
+        method = 'kiwi' if kiwi else 'fallback'
+
+        parts = smart_split_sentence(text, max_length)
+
+        return {
+            'success': True,
+            'parts': parts,
+            'method': method,
+            'original_length': len(text),
+            'part_count': len(parts)
+        }
+    except Exception as e:
+        print(f"[RoyStudio] 스마트 분리 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e),
+            'parts': [text]
+        }
+
+@eel.expose
+def smart_split_multiple_api(sentences, max_length=22):
+    """
+    여러 문장을 한 번에 스마트 분리
+
+    Args:
+        sentences: [{'id': ..., 'text': ...}, ...] 형태의 문장 리스트
+        max_length: 최대 글자 수
+
+    Returns:
+        {'success': True, 'results': [...]}
+    """
+    try:
+        kiwi = get_kiwi()
+        method = 'kiwi' if kiwi else 'fallback'
+
+        results = []
+        for sentence in sentences:
+            text = sentence.get('text', '')
+            sentence_id = sentence.get('id')
+
+            if len(text.strip()) <= max_length:
+                # 분리 불필요
+                results.append({
+                    'id': sentence_id,
+                    'original': text,
+                    'parts': [text],
+                    'split_needed': False
+                })
+            else:
+                # 분리 필요
+                parts = smart_split_sentence(text, max_length)
+                results.append({
+                    'id': sentence_id,
+                    'original': text,
+                    'parts': parts,
+                    'split_needed': True
+                })
+
+        return {
+            'success': True,
+            'results': results,
+            'method': method,
+            'total_processed': len(sentences)
+        }
+    except Exception as e:
+        print(f"[RoyStudio] 다중 스마트 분리 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+@eel.expose
+def check_kiwi_installed():
+    """Kiwi 설치 여부 확인"""
+    try:
+        from kiwipiepy import Kiwi
+        kiwi = Kiwi()
+        # 테스트 분석
+        result = kiwi.tokenize("테스트")
+        return {'installed': True, 'working': True}
+    except ImportError:
+        return {'installed': False, 'working': False, 'message': 'pip install kiwipiepy 필요'}
+    except Exception as e:
+        return {'installed': True, 'working': False, 'message': str(e)}
 
 print("[RoyStudio] 백엔드 모듈 로드 완료")

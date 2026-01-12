@@ -928,6 +928,70 @@
     font-size: 12px;
 }
 
+.sentence-char-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    min-width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* 22자 초과 경고 */
+.sentence-item.over-limit {
+    background: rgba(255, 100, 100, 0.15);
+    border-left: 3px solid #ff6b6b;
+}
+
+.sentence-item.over-limit .sentence-char-count {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+/* 재생 중인 클립 하이라이트 */
+.sentence-item.playing {
+    background: rgba(100, 200, 100, 0.15);
+    border-left: 3px solid #4CAF50;
+}
+
+/* 그룹 클립 스타일 */
+.sentence-item.grouped {
+    position: relative;
+    margin-left: 8px;
+}
+
+.sentence-item.grouped .group-indicator {
+    position: absolute;
+    left: -8px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #5c9eff;
+    border-radius: 2px;
+}
+
+.sentence-item.group-first .group-indicator {
+    top: 50%;
+    border-radius: 2px 2px 0 0;
+}
+
+.sentence-item.group-last .group-indicator {
+    bottom: 50%;
+    border-radius: 0 0 2px 2px;
+}
+
+.sentence-item.group-middle .group-indicator {
+    border-radius: 0;
+}
+
+/* 그룹 배경색 */
+.sentence-item.grouped {
+    background: rgba(92, 158, 255, 0.08);
+}
+
+.sentence-item.grouped:hover {
+    background: rgba(92, 158, 255, 0.15);
+}
+
 /* 슬라이더 행 */
 .slider-row {
     display: flex;
